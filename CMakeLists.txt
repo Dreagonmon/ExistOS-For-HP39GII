@@ -18,6 +18,7 @@ SET(BUILD_SHARED_LIBRARIES OFF)
 
 include_directories(./)
 
-add_subdirectory(System)
+#add_subdirectory(System)
+add_subdirectory(SystemR)
 add_subdirectory(OSLoader)
 
