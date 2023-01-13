@@ -8,13 +8,12 @@
 #include "screen.h"
 
 GrayFrameBuffer *frame = NULL;
-uint8_t background_color = 0x1F;
+int16_t offx = 0;
+int16_t offy = 0;
 
 void display() {
-    // api_vram_flush();
-    printf("screen_frame addr %d\n", screen_frame);
-    gfb_clear(screen_frame, background_color);
-    gfb_blit(screen_frame, frame, 64, 32, COLOR_BLANK);
+    gfb_clear(screen_frame, COLOR_BLANK);
+    gfb_blit(screen_frame, frame, offx, offy, COLOR_BLANK);
     screen_flush();
 }
 
@@ -35,11 +34,31 @@ void main() {
     main_init();
     printf("Hello Dragon\n");
     printf("================================================\n");
+    display();
+    int KEY_UP = (0 << 3) + 4;
+    int KEY_RIGHT = (1 << 3) + 4;
+    int KEY_LEFT = (2 << 3) + 4;
+    int KEY_DOWN = (3 << 3) + 4;
     while (1) {
-        int key = api_get_key(-1);
-        printf("key: %d\n", key);
-        display();
-        background_color -= 0x20;
-        // background_color = background_color % 256;
+        if (api_get_key(KEY_UP)) {
+            // printf("key: %d\n", key);
+            offy -= 2;
+            display();
+        }
+        if (api_get_key(KEY_DOWN)) {
+            // printf("key: %d\n", key);
+            offy += 2;
+            display();
+        }
+        if (api_get_key(KEY_LEFT)) {
+            // printf("key: %d\n", key);
+            offx -= 2;
+            display();
+        }
+        if (api_get_key(KEY_RIGHT)) {
+            // printf("key: %d\n", key);
+            offx += 2;
+            display();
+        }
     }
 }
