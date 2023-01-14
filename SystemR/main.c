@@ -20,7 +20,8 @@ void display() {
 /* System Init */
 void main_init() {
     ll_cpu_slowdown_enable(false);
-    screen_init();
+    // screen_init_mono();
+    screen_init_gray();
     frame = gfb_new_mono_frame(LCD_PIX_W, LCD_PIX_H, COLOR_FULL);
     // frame = gfb_new_gray_frame(LCD_PIX_W, LCD_PIX_H);
     gfb_clear(frame, COLOR_BLANK);

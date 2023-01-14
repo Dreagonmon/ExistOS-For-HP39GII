@@ -185,7 +185,9 @@ u_int8_t _get_mono_pixel_unsafe(GrayFrameBuffer *frame, uint16_t x, uint16_t y) 
 }
 
 void gfb_free(GrayFrameBuffer *frame) {
-    vPortFree(frame->buffer);
+    if (frame->buffer != NULL) {
+        vPortFree(frame->buffer);
+    }
     vPortFree(frame);
 }
 
