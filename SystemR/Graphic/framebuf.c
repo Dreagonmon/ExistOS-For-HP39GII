@@ -1,10 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "framebuf.h"
 #include "FreeRTOS.h"
 
 #define max(a,b) ((a) >= (b) ? (a) : (b))
 #define min(a,b) ((a) <= (b) ? (a) : (b))
 #define abs(x) (((int32_t)x) < 0 ? (-x) : (x))
+
+#define malloc(s) pvPortMalloc(s)
+#define free(p) vPortFree(p)
 
 void gfb_clear(GrayFrameBuffer *frame, uint8_t color) {
     FunctionSetPixelUnsafe set_pixel = frame->set_pixel_unsafe;
@@ -163,7 +167,7 @@ void _set_gray_pixel_unsafe(GrayFrameBuffer *frame, uint16_t x, uint16_t y, uint
     frame->buffer[y*frame->width + x] = c;
 }
 
-u_int8_t _get_gray_pixel_unsafe(GrayFrameBuffer *frame, uint16_t x, uint16_t y) {
+uint8_t _get_gray_pixel_unsafe(GrayFrameBuffer *frame, uint16_t x, uint16_t y) {
 	return frame->buffer[y*frame->width + x];
 }
 
@@ -175,7 +179,7 @@ void _set_mono_pixel_unsafe(GrayFrameBuffer *frame, uint16_t x, uint16_t y, uint
     (frame->buffer)[index] = ((frame->buffer)[index] & ~(0x01 << offset)) | ((color != 0) << offset);
 }
 
-u_int8_t _get_mono_pixel_unsafe(GrayFrameBuffer *frame, uint16_t x, uint16_t y) {
+uint8_t _get_mono_pixel_unsafe(GrayFrameBuffer *frame, uint16_t x, uint16_t y) {
     // MVLSB format
     uint8_t color = (frame->buffer)[0];
     size_t index = (y >> 3) * frame->width + x + 1;
@@ -185,16 +189,19 @@ u_int8_t _get_mono_pixel_unsafe(GrayFrameBuffer *frame, uint16_t x, uint16_t y) 
 }
 
 void gfb_free(GrayFrameBuffer *frame) {
-    if (frame->buffer != NULL) {
-        vPortFree(frame->buffer);
+    if (frame == NULL) {
+        return;
     }
-    vPortFree(frame);
+    if (frame->buffer != NULL) {
+        free(frame->buffer);
+    }
+    free(frame);
 }
 
 GrayFrameBuffer *gfb_new_gray_frame(uint16_t w, uint16_t h) {
-    GrayFrameBuffer *frame = pvPortMalloc(sizeof(GrayFrameBuffer));
+    GrayFrameBuffer *frame = malloc(sizeof(GrayFrameBuffer));
     if (frame != NULL) {
-        uint8_t *buffer = pvPortMalloc(w * h);
+        uint8_t *buffer = malloc(w * h);
         if (buffer != NULL) {
             frame->buffer = buffer;
             frame->width = w;
@@ -202,7 +209,7 @@ GrayFrameBuffer *gfb_new_gray_frame(uint16_t w, uint16_t h) {
             frame->set_pixel_unsafe = _set_gray_pixel_unsafe;
             frame->get_pixel_unsafe = _get_gray_pixel_unsafe;
         } else {
-            vPortFree(frame);
+            free(frame);
             frame = NULL;
         }
     }
@@ -210,11 +217,11 @@ GrayFrameBuffer *gfb_new_gray_frame(uint16_t w, uint16_t h) {
 }
 
 GrayFrameBuffer *gfb_new_mono_frame(uint16_t w, uint16_t h, uint8_t color) {
-    GrayFrameBuffer *frame = pvPortMalloc(sizeof(GrayFrameBuffer));
+    GrayFrameBuffer *frame = malloc(sizeof(GrayFrameBuffer));
     if (frame != NULL) {
         uint16_t hp = h / 8;
         hp += (h % 8) ? 1 : 0;
-        uint8_t *buffer = pvPortMalloc((w * hp) + 1);
+        uint8_t *buffer = malloc((w * hp) + 1);
         if (buffer != NULL) {
             buffer[0] = color;
             frame->buffer = buffer;
@@ -223,7 +230,7 @@ GrayFrameBuffer *gfb_new_mono_frame(uint16_t w, uint16_t h, uint8_t color) {
             frame->set_pixel_unsafe = _set_mono_pixel_unsafe;
             frame->get_pixel_unsafe = _get_mono_pixel_unsafe;
         } else {
-            vPortFree(frame);
+            free(frame);
             frame = NULL;
         }
     }
