@@ -10,7 +10,7 @@
 #define LCD_REFRESH_BUFFER_SIZE  256 // must greater than 256
 #define LCD_REFRESH_BUFFER_LINES LCD_REFRESH_BUFFER_SIZE / LCD_PIX_W
 
-GrayFrameBuffer *screen_frame = NULL;
+gfb_GrayFrameBuffer *screen_frame = NULL;
 static uint8_t refrsh_buffer[LCD_REFRESH_BUFFER_SIZE];
 
 void screen_deinit() {
@@ -34,7 +34,7 @@ void screen_flush() {
     if (screen_frame == NULL) {
         return;
     }
-    FunctionGetPixelUnsafe get_pixel = screen_frame->get_pixel_unsafe;
+    gfb_FunctionGetPixelUnsafe get_pixel = screen_frame->get_pixel_unsafe;
     uint16_t y = 0;
     // generate and refresh buffer
     while (y < LCD_PIX_H) {

@@ -5,7 +5,7 @@
 
 #include "framebuf.h"
 
-extern GrayFrameBuffer *screen_frame;
+extern gfb_GrayFrameBuffer *screen_frame;
 
 void screen_deinit();
 void screen_init_mono();

@@ -5,9 +5,12 @@
 #include "basic_api.h"
 #include "sys_llapi.h"
 #include "framebuf.h"
+#include "bmfont.h"
 #include "screen.h"
+#include "font8x8.h"
+#include "font16x16.h"
 
-GrayFrameBuffer *frame = NULL;
+gfb_GrayFrameBuffer *frame = NULL;
 int16_t offx = 0;
 int16_t offy = 0;
 
@@ -29,6 +32,8 @@ void main_init() {
     gfb_draw_hline(frame, -5, 66, 512, COLOR_FULL);
     gfb_draw_vline(frame, 66, -2, 256, COLOR_FULL);
     gfb_draw_line(frame, 60, 66, 66, 60, COLOR_FULL);
+    bmf_draw_text(font8x8_quan, u8str(u8"Hello\n    Dragon\n你好\n    龙龙"), 35, frame, 0, 0, 0, 0, COLOR_FULL);
+    bmf_draw_text(font16x16_unifont, u8str(u8"Hello\n    Dragon\n你好\n    龙龙"), 35, frame, 68, 68, 0, 0, COLOR_FULL);
 }
 
 void main() {
