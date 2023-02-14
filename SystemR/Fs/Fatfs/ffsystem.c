@@ -5,6 +5,9 @@
 
 
 #include "ff.h"
+#include "FreeRTOS.h"
+#include "sys_clock.h"
+#include "time.h"
 
 
 #if FF_USE_LFN == 3	/* Dynamic memory allocation */
@@ -166,6 +169,34 @@ void ff_rel_grant (
 
 	/* CMSIS-RTOS */
 //	osMutexRelease(sobj);
+}
+
+/*------------------------------------------------------------------------*/
+/* Get RTC Time in FAT32 Format                                           */
+/*------------------------------------------------------------------------*/
+/*
+->> lower bit
+The time that the file was created. Multiply Seconds by 2.
+Hour 	5 bits
+Minutes 	6 bits
+Seconds 	5 bits
+The date on which the file was created.
+Year 	7 bits
+Month 	4 bits
+Day 	5 bits 
+->> higher bit
+*/
+
+uint32_t get_fattime() {
+	time_t tms = (time_t)rtc_time();
+	struct tm *now = gmtime(&tms);
+	uint32_t timestamp = (uint32_t)(((now->tm_year + 1900 - 1980) & 0b1111111) << 25);
+	timestamp |= ((uint32_t)((now->tm_mon + 1) & 0b1111) << 21);
+	timestamp |= ((uint32_t)((now->tm_mday) & 0b11111) << 16);
+	timestamp |= ((uint32_t)((now->tm_hour) & 0b11111) << 11);
+	timestamp |= ((uint32_t)((now->tm_min) & 0b111111) << 5);
+	timestamp |= ((uint32_t)((now->tm_sec / 2) & 0b11111) << 0);
+	return timestamp;
 }
 
 #endif

@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include "framebuf.h"
 
-#define u8str(x) ((uint8_t *)x)
-
 typedef struct bmf_BitmapFontFile bmf_BitmapFontFile;
 typedef struct bmf_BitmapFont bmf_BitmapFont;
 typedef void (*bmf_FunctionSeek)(bmf_BitmapFontFile *ffile, uint32_t offset);
@@ -24,6 +22,6 @@ typedef struct bmf_BitmapFont {
     const uint8_t *ascii_width; // size [94]
 } bmf_BitmapFont;
 
-uint16_t bmf_get_text_width(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_len);
-uint32_t bmf_draw_text(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_len, gfb_GrayFrameBuffer *frame, int16_t x, int16_t y, uint16_t width_limit, uint16_t height_limit, uint8_t color);
-uint32_t bmf_get_text_offset(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_len, uint16_t width_limit, uint16_t height_limit);
+uint16_t bmf_get_text_width(bmf_BitmapFont *font, const char *text, uint32_t bytes_len);
+uint32_t bmf_draw_text(bmf_BitmapFont *font, const char *text, uint32_t bytes_len, gfb_FrameBuffer *frame, int16_t x, int16_t y, uint16_t width_limit, uint16_t height_limit, uint16_t color);
+uint32_t bmf_get_text_offset(bmf_BitmapFont *font, const char *text, uint32_t bytes_len, uint16_t width_limit, uint16_t height_limit);

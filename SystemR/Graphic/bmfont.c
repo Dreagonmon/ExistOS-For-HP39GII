@@ -1,10 +1,15 @@
 #include <stdint.h>
 #include "bmfont.h"
 #include "framebuf.h"
-#include "FreeRTOS.h"
 
-#define malloc(s) pvPortMalloc(s)
-#define free(p) vPortFree(p)
+#define BMFONT_USE_MALLOC __STDC_HOSTED__
+#if BMFONT_USE_MALLOC
+    #include "FreeRTOS.h"
+    #define malloc(s) pvPortMalloc(s)
+    #define free(p) vPortFree(p)
+#else
+    #define BMFONT_CHAR_BUFFER_SIZE 32
+#endif
 
 #define bmf_TAB_SIZE 2
 #define bmf_ASCII_EOF 0
@@ -13,7 +18,7 @@
 #define bmf_ASCII_R 13
 #define bmf_ASCII_SPACE 32
 #define bmf_ASCII_START 33 // include
-#define bmf_ASCII_END 126 //include
+#define bmf_ASCII_END 126 // include
 
 typedef struct {
     const uint32_t byte_limit;
@@ -26,7 +31,7 @@ typedef struct {
     int16_t char_y;
     uint32_t count;
     uint32_t unicode;
-    uint8_t *utf8_text;
+    const char *utf8_text;
     uint8_t last_char_width;
     uint8_t is_looping;
 } bmf_LoopState;
@@ -37,7 +42,7 @@ void place_next_char(bmf_BitmapFont *font, bmf_LoopState *state) {
     // get unicode char
     uint32_t b_off = state->byte_offset;
     uint32_t b_lim = state->byte_limit;
-    uint8_t *utf8_text = state->utf8_text;
+    const uint8_t *utf8_text = (const uint8_t *)(state->utf8_text);
     if (b_off >= b_lim) {
         state->is_looping = 0;
         state->unicode = bmf_ASCII_EOF;
@@ -65,7 +70,7 @@ void place_next_char(bmf_BitmapFont *font, bmf_LoopState *state) {
     }
     // get char width
     if (unicode == bmf_ASCII_SPACE) {
-        u8_char_size = u8_char_size / 2; // half width space
+        u8_char_size = font->char_width / 2; // half width space
     } else if (unicode == bmf_ASCII_T) {
         u8_char_size = font->char_width * bmf_TAB_SIZE;
     } else if (unicode == bmf_ASCII_R || unicode == bmf_ASCII_N) {
@@ -80,7 +85,7 @@ void place_next_char(bmf_BitmapFont *font, bmf_LoopState *state) {
         state->char_y += font->char_height;
         state->char_x = state->start_x;
     }
-    if (state->height_limit > 0 && (state->char_y + font->char_height - state->start_y > state->width_limit)) {
+    if (state->height_limit > 0 && (state->char_y + font->char_height - state->start_y > state->height_limit)) {
         if (unicode == bmf_ASCII_N) {
             state->byte_offset = b_off;
             state->unicode = unicode;
@@ -97,7 +102,7 @@ void place_next_char(bmf_BitmapFont *font, bmf_LoopState *state) {
     return;
 }
 
-uint16_t bmf_get_text_width(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_len) {
+uint16_t bmf_get_text_width(bmf_BitmapFont *font, const char *text, uint32_t bytes_len) {
     uint16_t total_width = 0;
     uint32_t b_off = 0;
     while (b_off < bytes_len) {
@@ -123,7 +128,7 @@ uint16_t bmf_get_text_width(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_
         }
         // get char width
         if (unicode == bmf_ASCII_SPACE) {
-            u8_char_size = u8_char_size / 2; // half width space
+            u8_char_size = font->char_width / 2; // half width space
         } else if (unicode == bmf_ASCII_T) {
             u8_char_size = font->char_width * bmf_TAB_SIZE;
         } else if (unicode == bmf_ASCII_R || unicode == bmf_ASCII_N) {
@@ -138,7 +143,7 @@ uint16_t bmf_get_text_width(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_
     return total_width;
 }
 
-uint32_t bmf_draw_text(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_len, gfb_GrayFrameBuffer *frame, int16_t x, int16_t y, uint16_t width_limit, uint16_t height_limit, uint8_t color) {
+uint32_t bmf_draw_text(bmf_BitmapFont *font, const char *text, uint32_t bytes_len, gfb_FrameBuffer *frame, int16_t x, int16_t y, uint16_t width_limit, uint16_t height_limit, uint16_t color) {
     bmf_LoopState state_obj = {bytes_len, 0, x, y, width_limit, height_limit, x, y, 0, 0, text, 0, 1};
     bmf_LoopState *state = &state_obj;
     bmf_FunctionGetCharImage get_char_image = font->get_char_image;
@@ -147,7 +152,14 @@ uint32_t bmf_draw_text(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_len, 
     uint8_t wp = ch_w / 8;
     wp += (ch_w % 8) ? 1 : 0;
     uint16_t buffer_size = wp * ch_h;
-    uint8_t *buffer = malloc(buffer_size);
+    #if BMFONT_USE_MALLOC
+        uint8_t *buffer = malloc(buffer_size);
+    #else
+        if (buffer_size > BMFONT_CHAR_BUFFER_SIZE) {
+            return 0;
+        }
+        uint8_t buffer[BMFONT_CHAR_BUFFER_SIZE];
+    #endif
     while (state_obj.is_looping) {
         place_next_char(font, state);
         if (state_obj.is_looping && state_obj.unicode != bmf_ASCII_R && state_obj.unicode != bmf_ASCII_N && state_obj.unicode != bmf_ASCII_T && state_obj.unicode != bmf_ASCII_SPACE) {
@@ -175,11 +187,13 @@ uint32_t bmf_draw_text(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_len, 
             }
         }
     }
-    free(buffer);
+    #if BMFONT_USE_MALLOC
+        free(buffer);
+    #endif
     return state_obj.byte_offset;
 }
 
-uint32_t bmf_get_text_offset(bmf_BitmapFont *font, uint8_t *text, uint32_t bytes_len, uint16_t width_limit, uint16_t height_limit) {
+uint32_t bmf_get_text_offset(bmf_BitmapFont *font, const char *text, uint32_t bytes_len, uint16_t width_limit, uint16_t height_limit) {
     bmf_LoopState state_obj = {bytes_len, 0, 0, 0, width_limit, height_limit, 0, 0, 0, 0, text, 0, 1};
     bmf_LoopState *state = &state_obj;
     while (state_obj.is_looping) {

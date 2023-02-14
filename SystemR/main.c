@@ -2,69 +2,88 @@
 #include <stdio.h>
 #include <string.h>
 #include "FreeRTOS.h"
-#include "basic_api.h"
 #include "sys_llapi.h"
 #include "framebuf.h"
 #include "bmfont.h"
 #include "screen.h"
 #include "font8x8.h"
 #include "font16x16.h"
+#include "ui_utils.h"
+#include "ui_sysbar.h"
+#include "keyboard.h"
+#include "ff.h"
+#include "fs_utils.h"
 
-gfb_GrayFrameBuffer *frame = NULL;
+gfb_FrameBuffer *frame = NULL;
 int16_t offx = 0;
 int16_t offy = 0;
 
+const StrItem TEXT_MENU[] = stritemlist(
+    stritem("Main Menu"),
+    stritem("主菜单")
+);
+const StrItem TEXT_F1[] = stritemlist(
+    stritem("Fn1"),
+    stritem("功能1")
+);
+const StrItem TEXT_F2[] = stritemlist(
+    stritem("Fn2"),
+    stritem("功能2")
+);
+const StrItem TEXT_F3[] = stritemlist(
+    stritem("Fn3"),
+    stritem("功能3")
+);
+const StrItem TEXT_F4[] = stritemlist(
+    stritem("Fn4"),
+    stritem("功能4")
+);
+const StrItem TEXT_F5[] = stritemlist(
+    stritem("Fn5"),
+    stritem("功能5")
+);
+const StrItem TEXT_F6[] = stritemlist(
+    stritem("Fn6"),
+    stritem("功能6")
+);
+
 void display() {
-    gfb_clear(screen_frame, COLOR_BLANK);
-    gfb_blit(screen_frame, frame, offx, offy, COLOR_BLANK);
+    ui_set_lang(ui_LANG_CHS);
+    ui_sysbar_title(ui_trs(TEXT_MENU));
+    ui_sysbar_fn_set_cell(0, ui_trs(TEXT_F1));
+    ui_sysbar_fn_set_cell(1, ui_trs(TEXT_F2));
+    // ui_sysbar_fn_set_cell(2, ui_trs(TEXT_F3));
+    ui_set_lang(ui_LANG_ENG);
+    // ui_sysbar_fn_set_cell(3, ui_trs(TEXT_F4));
+    ui_sysbar_fn_set_cell(4, ui_trs(TEXT_F5));
+    ui_sysbar_fn_set_cell(5, ui_trs(TEXT_F6));
     screen_flush();
 }
 
 /* System Init */
 void main_init() {
     ll_cpu_slowdown_enable(false);
-    // screen_init_mono();
-    screen_init_gray();
-    frame = gfb_new_mono_frame(LCD_PIX_W, LCD_PIX_H, COLOR_FULL);
-    // frame = gfb_new_gray_frame(LCD_PIX_W, LCD_PIX_H);
-    gfb_clear(frame, COLOR_BLANK);
-    gfb_set_pixel(frame, 64, 64, COLOR_FULL);
-    gfb_draw_hline(frame, -5, 66, 512, COLOR_FULL);
-    gfb_draw_vline(frame, 66, -2, 256, COLOR_FULL);
-    gfb_draw_line(frame, 60, 66, 66, 60, COLOR_FULL);
-    bmf_draw_text(font8x8_quan, u8str(u8"Hello\n    Dragon\n你好\n    龙龙"), 35, frame, 0, 0, 0, 0, COLOR_FULL);
-    bmf_draw_text(font16x16_unifont, u8str(u8"Hello\n    Dragon\n你好\n    龙龙"), 35, frame, 68, 68, 0, 0, COLOR_FULL);
+    screen_init_mono();
 }
 
 void main() {
     main_init();
+    // test below
     printf("Hello Dragon\n");
     printf("================================================\n");
     display();
-    int KEY_UP = (0 << 3) + 4;
-    int KEY_RIGHT = (1 << 3) + 4;
-    int KEY_LEFT = (2 << 3) + 4;
-    int KEY_DOWN = (3 << 3) + 4;
+    ll_charge_enable(true);
+    initFS();
+    FIL f;
+    FRESULT rst = f_open(&f, "test.txt", FA_READ | FA_WRITE | FA_CREATE_ALWAYS);
+    UINT size;
+    rst = f_write(&f, "Hello\n", 6, &size);
+    rst = f_sync(&f);
+    rst = f_close(&f);
+    printf("rst %d\n", rst);
     while (1) {
-        if (api_get_key(KEY_UP)) {
-            // printf("key: %d\n", key);
-            offy -= 2;
-            display();
-        }
-        if (api_get_key(KEY_DOWN)) {
-            // printf("key: %d\n", key);
-            offy += 2;
-            display();
-        }
-        if (api_get_key(KEY_LEFT)) {
-            // printf("key: %d\n", key);
-            offx -= 2;
-            display();
-        }
-        if (api_get_key(KEY_RIGHT)) {
-            // printf("key: %d\n", key);
-            offx += 2;
-            display();
+        if (kbd_check_key(kbd_K_ON)) {
+            ll_power_off();
         }
     }
 }

@@ -9,6 +9,8 @@ include_directories(./Fs)
 include_directories(./Fs/Fatfs)
 include_directories(./ExistOS)
 include_directories(./Graphic)
+include_directories(./Graphic/UI)
+include_directories(./Keyboard)
 
 aux_source_directory(.                                             SYS_SRCS)
 aux_source_directory(./RTOSCore                                    SYS_SRCS)
@@ -17,6 +19,8 @@ aux_source_directory(./Fs                                          SYS_SRCS)
 aux_source_directory(./Fs/Fatfs                                    SYS_SRCS)
 aux_source_directory(./ExistOS                                     SYS_SRCS)
 aux_source_directory(./Graphic                                     SYS_SRCS)
+aux_source_directory(./Graphic/UI                                  SYS_SRCS)
+aux_source_directory(./Keyboard                                    SYS_SRCS)
 
 add_executable(sys.elf ${SYS_SRCS})
 

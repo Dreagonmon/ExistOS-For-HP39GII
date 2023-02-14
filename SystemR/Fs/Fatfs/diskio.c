@@ -113,12 +113,10 @@ DRESULT disk_ioctl(
         return RES_OK;
     case GET_SECTOR_COUNT: 
         val = ll_flash_get_pages();
-        printf("sc:%d\n", val);
         *((LBA_t *)buff) = val;
         return RES_OK;
     case GET_SECTOR_SIZE:
         val = ll_flash_get_page_size();
-        printf("ss:%d\n", val);
         //((BYTE *)buff)[0] = val & 0xFF;
         //((BYTE *)buff)[1] = (val>>8) & 0xFF;
         *((WORD *)buff) = val;

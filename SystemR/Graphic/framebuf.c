@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "framebuf.h"
 #include "FreeRTOS.h"
 
@@ -9,7 +10,7 @@
 #define malloc(s) pvPortMalloc(s)
 #define free(p) vPortFree(p)
 
-void gfb_clear(gfb_GrayFrameBuffer *frame, uint8_t color) {
+void gfb_clear(gfb_FrameBuffer *frame, uint16_t color) {
     gfb_FunctionSetPixelUnsafe set_pixel = frame->set_pixel_unsafe;
     uint16_t width = frame->width;
     uint16_t height = frame->height;
@@ -22,21 +23,21 @@ void gfb_clear(gfb_GrayFrameBuffer *frame, uint8_t color) {
     }
 }
 
-uint8_t gfb_get_pixel(gfb_GrayFrameBuffer *frame, int16_t x, int16_t y) {
+uint16_t gfb_get_pixel(gfb_FrameBuffer *frame, int16_t x, int16_t y) {
     if((x >= 0) && (y >= 0) && (x < frame->width) && (y < frame->height)) {
 		return (*(frame->get_pixel_unsafe))(frame, x, y);
 	} else {
-        return COLOR_BLANK;
+        return COLOR_CLEAR;
     }
 }
 
-void gfb_set_pixel(gfb_GrayFrameBuffer *frame, int16_t x, int16_t y, uint8_t color) {
+void gfb_set_pixel(gfb_FrameBuffer *frame, int16_t x, int16_t y, uint16_t color) {
     if((x >= 0) && (y >= 0) && (x < frame->width) && (y < frame->height)) {
 		(*(frame->set_pixel_unsafe))(frame, x, y, color);
 	}
 }
 
-void gfb_fill_rect(gfb_GrayFrameBuffer *frame, int16_t x, int16_t y, int16_t w, int16_t h, uint8_t color) {
+void gfb_fill_rect(gfb_FrameBuffer *frame, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     if (h < 1 || w < 1 || x + w <= 0 || y + h <= 0 || y >= frame->height || x >= frame->width) {
         // No operation needed.
         return;
@@ -55,15 +56,15 @@ void gfb_fill_rect(gfb_GrayFrameBuffer *frame, int16_t x, int16_t y, int16_t w, 
     }
 }
 
-void gfb_draw_hline(gfb_GrayFrameBuffer *frame, int16_t x, int16_t y, int16_t len, uint8_t color) {
+void gfb_draw_hline(gfb_FrameBuffer *frame, int16_t x, int16_t y, int16_t len, uint16_t color) {
     gfb_fill_rect(frame, x, y, len, 1, color);
 }
 
-void gfb_draw_vline(gfb_GrayFrameBuffer *frame, int16_t x, int16_t y, int16_t len, uint8_t color) {
+void gfb_draw_vline(gfb_FrameBuffer *frame, int16_t x, int16_t y, int16_t len, uint16_t color) {
     gfb_fill_rect(frame, x, y, 1, len, color);
 }
 
-void gfb_draw_line(gfb_GrayFrameBuffer *frame, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t color) {
+void gfb_draw_line(gfb_FrameBuffer *frame, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
     gfb_FunctionSetPixelUnsafe set_pixel = frame->set_pixel_unsafe;
     uint16_t width = frame->width;
     uint16_t height = frame->height;
@@ -123,7 +124,7 @@ void gfb_draw_line(gfb_GrayFrameBuffer *frame, int16_t x1, int16_t y1, int16_t x
     }
 }
 
-void gfb_blit(gfb_GrayFrameBuffer *frame_to, gfb_GrayFrameBuffer *frame_from, int16_t x, int16_t y, uint8_t ignore_color) {
+void gfb_blit(gfb_FrameBuffer *frame_to, gfb_FrameBuffer *frame_from, int16_t x, int16_t y, uint16_t ignore_color) {
     gfb_FunctionGetPixelUnsafe get_pixel_from = frame_from->get_pixel_unsafe;
     gfb_FunctionSetPixelUnsafe set_pixel_to = frame_to->set_pixel_unsafe;
     if (frame_from == NULL) {
@@ -162,32 +163,32 @@ void gfb_blit(gfb_GrayFrameBuffer *frame_to, gfb_GrayFrameBuffer *frame_from, in
 /* ================ */
 /* in-memory frame */
 
-void _set_gray_pixel_unsafe(gfb_GrayFrameBuffer *frame, uint16_t x, uint16_t y, uint8_t c) {
+void _set_gray_pixel_unsafe(gfb_FrameBuffer *frame, uint16_t x, uint16_t y, uint16_t c) {
     frame->buffer[y*frame->width + x] = c;
 }
 
-uint8_t _get_gray_pixel_unsafe(gfb_GrayFrameBuffer *frame, uint16_t x, uint16_t y) {
+uint16_t _get_gray_pixel_unsafe(gfb_FrameBuffer *frame, uint16_t x, uint16_t y) {
 	return frame->buffer[y*frame->width + x];
 }
 
-void _set_mono_pixel_unsafe(gfb_GrayFrameBuffer *frame, uint16_t x, uint16_t y, uint8_t c) {
+void _set_mono_pixel_unsafe(gfb_FrameBuffer *frame, uint16_t x, uint16_t y, uint16_t c) {
     // MVLSB format
-    uint8_t color = (c != COLOR_BLANK) ? 1 : 0;
-    size_t index = (y >> 3) * frame->width + x + 1;
+    uint8_t color = (c != COLOR_CLEAR) ? 1 : 0;
+    uint32_t index = (y >> 3) * frame->width + x + 2;
     uint8_t offset = y & 0x07;
     (frame->buffer)[index] = ((frame->buffer)[index] & ~(0x01 << offset)) | ((color != 0) << offset);
 }
 
-uint8_t _get_mono_pixel_unsafe(gfb_GrayFrameBuffer *frame, uint16_t x, uint16_t y) {
+uint16_t _get_mono_pixel_unsafe(gfb_FrameBuffer *frame, uint16_t x, uint16_t y) {
     // MVLSB format
-    uint8_t color = (frame->buffer)[0];
-    size_t index = (y >> 3) * frame->width + x + 1;
+    uint16_t color = (((frame->buffer)[0]) << 8) | ((frame->buffer)[1]);
+    uint32_t index = (y >> 3) * frame->width + x + 2;
     uint8_t offset = y & 0x07;
     uint8_t value = ((frame->buffer)[index] >> offset) & 0x01;
-    return value != 0 ? color : COLOR_BLANK;
+    return value != 0 ? color : COLOR_CLEAR;
 }
 
-void gfb_free(gfb_GrayFrameBuffer *frame) {
+void gfb_free(gfb_FrameBuffer *frame) {
     if (frame == NULL) {
         return;
     }
@@ -197,8 +198,8 @@ void gfb_free(gfb_GrayFrameBuffer *frame) {
     free(frame);
 }
 
-gfb_GrayFrameBuffer *gfb_new_gray_frame(uint16_t w, uint16_t h) {
-    gfb_GrayFrameBuffer *frame = malloc(sizeof(gfb_GrayFrameBuffer));
+gfb_FrameBuffer *gfb_new_gray_frame(uint16_t w, uint16_t h) {
+    gfb_FrameBuffer *frame = malloc(sizeof(gfb_FrameBuffer));
     if (frame != NULL) {
         uint8_t *buffer = malloc(w * h);
         if (buffer != NULL) {
@@ -215,14 +216,15 @@ gfb_GrayFrameBuffer *gfb_new_gray_frame(uint16_t w, uint16_t h) {
     return frame;
 }
 
-gfb_GrayFrameBuffer *gfb_new_mono_frame(uint16_t w, uint16_t h, uint8_t color) {
-    gfb_GrayFrameBuffer *frame = malloc(sizeof(gfb_GrayFrameBuffer));
+gfb_FrameBuffer *gfb_new_mono_frame(uint16_t w, uint16_t h, uint16_t color) {
+    gfb_FrameBuffer *frame = malloc(sizeof(gfb_FrameBuffer));
     if (frame != NULL) {
         uint16_t hp = h / 8;
         hp += (h % 8) ? 1 : 0;
-        uint8_t *buffer = malloc((w * hp) + 1);
+        uint8_t *buffer = malloc((w * hp) + 2);
         if (buffer != NULL) {
-            buffer[0] = color;
+            buffer[0] = (color >> 8) & 0xFF;
+            buffer[1] = color & 0xFF;
             frame->buffer = buffer;
             frame->width = w;
             frame->height = h;
