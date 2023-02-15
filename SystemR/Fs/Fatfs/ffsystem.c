@@ -175,16 +175,16 @@ void ff_rel_grant (
 /* Get RTC Time in FAT32 Format                                           */
 /*------------------------------------------------------------------------*/
 /*
-->> lower bit
-The time that the file was created. Multiply Seconds by 2.
-Hour 	5 bits
-Minutes 	6 bits
-Seconds 	5 bits
+->> higher bit
 The date on which the file was created.
 Year 	7 bits
 Month 	4 bits
 Day 	5 bits 
-->> higher bit
+The time that the file was created. Multiply Seconds by 2.
+Hour 	5 bits
+Minutes 	6 bits
+Seconds 	5 bits
+->> lower bit
 */
 
 uint32_t get_fattime() {
