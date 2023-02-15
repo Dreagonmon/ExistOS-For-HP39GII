@@ -7,7 +7,7 @@
 #include "ff.h"
 #include "FreeRTOS.h"
 #include "sys_clock.h"
-#include "time.h"
+#include "uclock.h"
 
 
 #if FF_USE_LFN == 3	/* Dynamic memory allocation */
@@ -188,14 +188,19 @@ Seconds 	5 bits
 */
 
 uint32_t get_fattime() {
-	time_t tms = (time_t)rtc_time();
-	struct tm *now = gmtime(&tms);
+	int64_t tms = rtc_time() & INT64_MAX;
+	struct utm *now = pvPortMalloc(sizeof(struct utm));
+	if (now == NULL) {
+		return 0; // mem full
+	}
+	uclock_secs_to_tm(tms, now);
 	uint32_t timestamp = (uint32_t)(((now->tm_year + 1900 - 1980) & 0b1111111) << 25);
 	timestamp |= ((uint32_t)((now->tm_mon + 1) & 0b1111) << 21);
 	timestamp |= ((uint32_t)((now->tm_mday) & 0b11111) << 16);
 	timestamp |= ((uint32_t)((now->tm_hour) & 0b11111) << 11);
 	timestamp |= ((uint32_t)((now->tm_min) & 0b111111) << 5);
 	timestamp |= ((uint32_t)((now->tm_sec / 2) & 0b11111) << 0);
+	vPortFree(now);
 	return timestamp;
 }
 
