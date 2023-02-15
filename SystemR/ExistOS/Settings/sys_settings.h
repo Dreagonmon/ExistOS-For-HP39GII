@@ -5,6 +5,7 @@
 struct sys_settings {
     uint16_t settings_version;
     uint64_t rtc_offset;
+    uint8_t ui_lang;
     uint8_t settings_inited;
 };
 

@@ -31,5 +31,7 @@ int32_t ticks_diff(int32_t t1, int32_t t2) {
 }
 
 void sleep_ms(uint32_t ms) {
-    ll_vm_sleep_ms(ms);
+    // ll_vm_sleep_ms(ms); // doesn't work in emu
+    int32_t start_tm = ticks_ms();
+    while (ticks_diff(ticks_ms(), start_tm) < ms);
 }

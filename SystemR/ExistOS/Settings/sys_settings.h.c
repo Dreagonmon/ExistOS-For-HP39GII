@@ -4,6 +4,7 @@
  * offset | size | field
  * 0      | 2    | settings_version
  * 2      | 8    | rtc_offset
+ * 10     | 1    | ui_lang
 */
 #include "sys_settings.h"
 #include "ff.h"
@@ -17,6 +18,15 @@ static const uint16_t CURRENT_VERSION = 1;
 struct sys_settings sys_settings_obj = { .settings_inited = 0 };
 struct sys_settings *sys_settings = &sys_settings_obj;
 
+static uint8_t write_u8(FIL *f, uint16_t val) {
+    uint8_t buf[1] = {0};
+    buf[0] = (val >> 0) & 0xFF;
+    UINT writen = 0;
+    FRESULT rst = f_write(f, buf, 1, &writen);
+    ensure_fileok(rst);
+    ensure_count(writen, 1);
+    return 1;
+}
 static uint8_t write_u16(FIL *f, uint16_t val) {
     uint8_t buf[2] = {0};
     buf[0] = (val >> 8) & 0xFF;
@@ -53,6 +63,17 @@ static uint8_t write_u64(FIL *f, uint64_t val) {
     FRESULT rst = f_write(f, buf, 8, &writen);
     ensure_fileok(rst);
     ensure_count(writen, 8);
+    return 1;
+}
+static uint8_t read_u8(FIL *f, uint8_t *val) {
+    uint8_t buf[1] = {0};
+    UINT read = 0;
+    FRESULT rst = f_read(f, buf, 1, &read);
+    ensure_fileok(rst);
+    ensure_count(read, 1);
+    uint16_t v = 0;
+    v |= (uint16_t)(buf[0]) << 0;
+    *val = v;
     return 1;
 }
 static uint8_t read_u16(FIL *f, uint16_t *val) {
@@ -105,6 +126,7 @@ uint8_t init_settings() {
     uint64_t val64;
     // uint32_t val32;
     uint16_t val16;
+    uint8_t val8;
     uint16_t version = 0;
     ensure_fileok(f_open(&f, SAVE_FILE_PATH, FA_READ | FA_OPEN_EXISTING));
     // settings_version
@@ -115,6 +137,11 @@ uint8_t init_settings() {
         ensure_true(read_u64(&f, &val64));
         sys_settings_obj.rtc_offset = val64;
     }
+    // ui_lang
+    if (version >= 1) {
+        ensure_true(read_u8(&f, &val8));
+        sys_settings_obj.ui_lang = val8;
+    }
     ensure_fileok(f_close(&f));
     sys_settings_obj.settings_version = CURRENT_VERSION;
     sys_settings_obj.settings_inited = 1;
@@ -124,6 +151,7 @@ uint8_t init_settings() {
 void init_default_settings() {
     sys_settings_obj.settings_version = CURRENT_VERSION;
     sys_settings_obj.rtc_offset = 0;
+    sys_settings_obj.ui_lang = 0;
     sys_settings_obj.settings_inited = 1;
 }
 
@@ -134,6 +162,8 @@ uint8_t save_settings() {
     ensure_true(write_u16(&f, CURRENT_VERSION));
     // rtc_offset
     ensure_true(write_u64(&f, sys_settings_obj.rtc_offset));
+    // ui_lang
+    ensure_true(write_u8(&f, sys_settings_obj.ui_lang));
     ensure_fileok(f_sync(&f));
     ensure_fileok(f_close(&f));
     return 1;

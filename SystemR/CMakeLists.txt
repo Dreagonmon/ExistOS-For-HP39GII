@@ -13,6 +13,7 @@ include_directories(./ExistOS/Settings)
 include_directories(./Graphic)
 include_directories(./Graphic/UI)
 include_directories(./Keyboard)
+include_directories(./Utils)
 
 aux_source_directory(.                                             SYS_SRCS)
 aux_source_directory(./RTOSCore                                    SYS_SRCS)
@@ -25,6 +26,7 @@ aux_source_directory(./ExistOS/Settings                            SYS_SRCS)
 aux_source_directory(./Graphic                                     SYS_SRCS)
 aux_source_directory(./Graphic/UI                                  SYS_SRCS)
 aux_source_directory(./Keyboard                                    SYS_SRCS)
+aux_source_directory(./Utils                                    SYS_SRCS)
 
 add_executable(sys.elf ${SYS_SRCS})
 
@@ -35,8 +37,9 @@ set(LINKER_FLAGS "SHELL:-T${LINKER_SCRIPT} -Wl,--wrap=malloc -Wl,--wrap=free")
 target_link_options(sys.elf PRIVATE ${LINKER_FLAGS}) 
 
 target_compile_options(sys.elf PRIVATE -mtune=arm926ej-s -mcpu=arm926ej-s -mlittle-endian -mfloat-abi=soft -marm
-    -Os -pipe 
+    -Os -pipe
     -DHP39
+    -fexec-charset=UTF-8
 )
 
 target_link_libraries(sys.elf -lm -lc -lrdimon -lgcc -lstdc++ -nostartfiles

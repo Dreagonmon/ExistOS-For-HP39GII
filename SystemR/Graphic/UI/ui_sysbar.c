@@ -1,11 +1,12 @@
 #include "ui_sysbar.h"
 #include "ui_utils.h"
+#include "ui_const.h"
 #include "screen.h"
 #include "framebuf.h"
 #include "font8x8.h"
 #include "font16x16.h"
 
-void ui_sysbar_title(CStrItem title) {
+void ui_sysbar_title(U8String title) {
     ui_text_area(
         font16x16_unifont, title, get_frame_buffer(),
         ui_TITLEBAR_X, ui_TITLEBAR_Y, ui_TITLEBAR_W, ui_TITLEBAR_H - 1,
@@ -19,7 +20,7 @@ void ui_sysbar_title(CStrItem title) {
     );
 }
 
-void ui_sysbar_fn_set_cell(uint8_t n, CStrItem title) {
+void ui_sysbar_fn_set_cell(uint8_t n, U8String title) {
     n %= 6;
     ui_text_area(
         font8x8_quan, title, get_frame_buffer(),
@@ -29,7 +30,7 @@ void ui_sysbar_fn_set_cell(uint8_t n, CStrItem title) {
     );
 }
 
-void ui_sysbar_fn_text(uint8_t start_n, uint8_t size_n, CStrItem text) {
+void ui_sysbar_fn_text(uint8_t start_n, uint8_t size_n, U8String text) {
     start_n = (start_n > 6) ? 6 : start_n;
     size_n = (size_n + start_n > 6) ? 6 - start_n : size_n;
     if (size_n <= 0) {
