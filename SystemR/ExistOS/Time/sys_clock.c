@@ -1,10 +1,11 @@
 #include "sys_clock.h"
 #include "sys_llapi.h"
-#include "time.h"
-
-static struct tm global_tm = { 0 };
+#include "sys_settings.h"
 
 uint64_t rtc_time() {
+    if (sys_settings->settings_inited) {
+        return (uint64_t)ll_rtc_get_sec() + sys_settings->rtc_offset;
+    }
     return ll_rtc_get_sec();
 }
 
@@ -27,4 +28,8 @@ int32_t ticks_add(int32_t t1, int32_t delta) {
 int32_t ticks_diff(int32_t t1, int32_t t2) {
     int32_t half = (INT32_MAX / 2) + 1;
     return ((t1 - t2 + half) & INT32_MAX) - half;
+}
+
+void sleep_ms(uint32_t ms) {
+    ll_vm_sleep_ms(ms);
 }

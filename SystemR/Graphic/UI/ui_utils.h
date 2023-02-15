@@ -19,12 +19,30 @@ typedef struct
     const uint16_t len;
     const char *text;
 } StrItem;
+/* const StrItem */
+typedef const StrItem CStrItem;
+/* StrItemGroup is a StrItem list that ends with NULL_STR_ITEM */
+typedef StrItem* StrItemGroup;
+/* CStrItemGroup is a const StrItem list that ends with NULL_STR_ITEM */
+typedef CStrItem* CStrItemGroup;
+/* CCStrItemGroup is a const StrItem list that ends with NULL_STR_ITEM, and it self is const. */
+typedef const CStrItemGroup CCStrItemGroup;
 
-#define stritem(x) ((const StrItem){.len = (const uint16_t)(sizeof(x)), .text = (const char *)(x)})
-#define NULL_STR_ITEM ((const StrItem){.len = 0, .text = NULL})
-#define stritemlist(...) { __VA_ARGS__, NULL_STR_ITEM }
+#define stritem(x) ((CStrItem){.len = (const uint16_t)(sizeof(x)), .text = (const char *)(x)})
+#define NULL_STR_ITEM ((CStrItem){.len = 0, .text = NULL})
+#define stritemgroup(...) { __VA_ARGS__, NULL_STR_ITEM }
+
+extern CCStrItemGroup TEXTG_CONFIRM;
+extern CCStrItemGroup TEXTG_CANCEL;
+extern CCStrItemGroup TEXTG_PAGE_UP;
+extern CCStrItemGroup TEXTG_PAGE_DOWN;
+extern CStrItem TEXT_EMPTY;
 
 void ui_text_area(bmf_BitmapFont *font, const StrItem text, gfb_FrameBuffer *frame, int16_t x, int16_t y, uint16_t w, uint16_t h, uint8_t align, uint16_t color, uint16_t bg_color);
-uint16_t ui_get_stritems_count(const StrItem *items);
 void ui_set_lang(uint8_t lang);
-const StrItem ui_trs(const StrItem *items);
+uint8_t ui_get_lang();
+uint16_t ui_get_stritems_count(CCStrItemGroup items);
+CStrItem ui_trs(CCStrItemGroup items);
+CStrItem *ui_trsp(CCStrItemGroup items);
+/* translate CCStrItemGroup list, list end with NULL */
+CCStrItemGroup ui_trsg(const CCStrItemGroup *groups);

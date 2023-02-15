@@ -22,5 +22,7 @@
 #define ui_CONTENT_W SCR_W
 #define ui_CONTENT_H (SCR_H - ui_FNBAR_H - ui_TITLEBAR_H)
 
-void ui_sysbar_title(const StrItem title);
-void ui_sysbar_fn_set_cell(uint8_t n, const StrItem title);
+void ui_sysbar_title(CStrItem title);
+void ui_sysbar_fn_set_cell(uint8_t n, CStrItem title);
+void ui_sysbar_fn_text(uint8_t start_n, uint8_t size_n, CStrItem text);
+void ui_sysbar_fn_clear();
