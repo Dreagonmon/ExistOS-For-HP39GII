@@ -177,13 +177,13 @@ void ff_rel_grant (
 /*
 ->> higher bit
 The date on which the file was created.
-Year 	7 bits
-Month 	4 bits
-Day 	5 bits 
+Year 	7 bits (0~127) + 1980
+Month 	4 bits (1~12)
+Day 	5 bits (1~31)
 The time that the file was created. Multiply Seconds by 2.
-Hour 	5 bits
-Minutes 	6 bits
-Seconds 	5 bits
+Hour 	5 bits (0~23)
+Minutes 	6 bits (0~59)
+Seconds 	5 bits (0~29, 2-second increments)
 ->> lower bit
 */
 

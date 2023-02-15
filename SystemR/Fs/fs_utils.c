@@ -2,16 +2,18 @@
 #include "ff.h"
 #include "FreeRTOS.h"
 
-void initFS() {
-    FRESULT fres;
-    FATFS *fs = (FATFS *)pvPortMalloc(sizeof(FATFS));
-    uint32_t keys = ll_vm_check_key() & 0xFFFF;
+static FATFS fs;
 
-    fres = f_mount(fs, FS_FLASH_PATH, 1);
-    if (fres != FR_OK) {
-        BYTE *work = (BYTE *)pvPortMalloc(FF_MAX_SS);
-        fres = f_mkfs(FS_FLASH_PATH, 0, work, FF_MAX_SS);
-        // printf("mkfs:%d\n", fres);
-        vPortFree(work);
-    }
+uint8_t mount_file_system() {
+    FRESULT fres;
+    fres = f_mount(&fs, FS_FLASH_PATH, 1);
+    return fres == FR_OK;
+}
+
+uint8_t format_file_system() {
+    FRESULT fres;
+    BYTE *work = (BYTE *)pvPortMalloc(FF_MAX_SS);
+    fres = f_mkfs(FS_FLASH_PATH, NULL, work, FF_MAX_SS); // use default format params: NULL
+    vPortFree(work);
+    return fres == FR_OK;
 }

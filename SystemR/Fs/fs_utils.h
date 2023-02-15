@@ -4,4 +4,5 @@
 
 #define FS_FLASH_PATH "/"
 
-void initFS(void);
+uint8_t mount_file_system();
+uint8_t format_file_system();
