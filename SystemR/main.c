@@ -106,7 +106,8 @@ void main() {
             if (kode == kbd_K_F1 || kode == kbd_K_ON) {
                 ll_power_off();
             }
+        } else {
+            sleep_ms(100);
         }
-        sleep_ms(100);
     }
 }

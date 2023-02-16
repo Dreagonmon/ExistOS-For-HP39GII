@@ -252,7 +252,9 @@ static int16_t __ui_menu_select(U8String title, U8StringGroup items, int16_t ini
             tmp_pointer = 0;
             screen_flush();
         }
-        sleep_ms(100);
+        if (act != kbd_ACTION_DOWN) {
+            sleep_ms(100);
+        }
     }
 }
 

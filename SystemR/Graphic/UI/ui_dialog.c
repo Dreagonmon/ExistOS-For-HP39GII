@@ -52,8 +52,9 @@ uint8_t __ui_dialog(U8String title, U8String content, uint8_t is_alert) {
             } else if (!is_alert && (key_code == kbd_K_F6 || key_code == kbd_K_ENTER)) {
                 return 1;
             }
+        } else {
+            sleep_ms(100);
         }
-        sleep_ms(100);
     }
 }
 
