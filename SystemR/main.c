@@ -27,8 +27,8 @@ U8StringGroup TEXTG_FORMAT_FAILED =
     "Failed to format Flash.\0"
     "Flash格式化失败.\0";
 U8StringGroup TEXTG_WELCOME_MESSAGE =
-    "HP 39gii UselessOS\0"
-    "HP 39gii 天地無用OS\0";
+    "HP 39gII UselessOS\0"
+    "HP 39gII 天地無用OS\0";
 U8StringGroup TEXTG_OFF =
     "OFF\0"
     "关机\0";
@@ -83,7 +83,7 @@ void render_content() {
 }
 
 void main_ui() {
-    ui_sysbar_title("HP 39gii");
+    ui_sysbar_title("HP 39gII");
     render_content();
     ui_sysbar_fn_clear();
     ui_sysbar_fn_set_cell(0, ui_trs(TEXTG_OFF));
