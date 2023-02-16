@@ -30,8 +30,12 @@ int32_t ticks_diff(int32_t t1, int32_t t2) {
     return ((t1 - t2 + half) & INT32_MAX) - half;
 }
 
+extern bool g_system_in_emulator;
 void sleep_ms(uint32_t ms) {
-    // ll_vm_sleep_ms(ms); // doesn't work in emu
-    int32_t start_tm = ticks_ms();
-    while (ticks_diff(ticks_ms(), start_tm) < ms);
+    if (g_system_in_emulator) {
+        int32_t start_tm = ticks_ms();
+        while (ticks_diff(ticks_ms(), start_tm) < ms);
+    } else {
+        ll_vm_sleep_ms(ms); // doesn't work in emu
+    }
 }

@@ -5,6 +5,7 @@
  * 0      | 2    | settings_version
  * 2      | 8    | rtc_offset
  * 10     | 1    | ui_lang
+ * 11     | 1    | cpu_slowdown_mode
 */
 #include "sys_settings.h"
 #include "ff.h"
@@ -142,6 +143,21 @@ uint8_t init_settings() {
         ensure_true(read_u8(&f, &val8));
         sys_settings_obj.ui_lang = val8;
     }
+    // cpu_slowdown_mode
+    if (version >= 1) {
+        ensure_true(read_u8(&f, &val8));
+        sys_settings_obj.cpu_slowdown_mode = val8;
+    }
+    // flag1
+    if (version >= 1) {
+        ensure_true(read_u8(&f, &val8));
+        sys_settings_obj.flag1 = val8;
+    }
+    // flag2
+    if (version >= 1) {
+        ensure_true(read_u8(&f, &val8));
+        sys_settings_obj.flag2 = val8;
+    }
     ensure_fileok(f_close(&f));
     sys_settings_obj.settings_version = CURRENT_VERSION;
     sys_settings_obj.settings_inited = 1;
@@ -152,6 +168,9 @@ void init_default_settings() {
     sys_settings_obj.settings_version = CURRENT_VERSION;
     sys_settings_obj.rtc_offset = 0;
     sys_settings_obj.ui_lang = 0;
+    sys_settings_obj.cpu_slowdown_mode = 0;
+    sys_settings_obj.flag1 = 0;
+    sys_settings_obj.flag2 = 0;
     sys_settings_obj.settings_inited = 1;
 }
 
@@ -164,6 +183,13 @@ uint8_t save_settings() {
     ensure_true(write_u64(&f, sys_settings_obj.rtc_offset));
     // ui_lang
     ensure_true(write_u8(&f, sys_settings_obj.ui_lang));
+    // cpu_slowdown_mode
+    ensure_true(write_u8(&f, sys_settings_obj.cpu_slowdown_mode));
+    // flag1
+    ensure_true(write_u8(&f, sys_settings_obj.flag1));
+    // flag2
+    ensure_true(write_u8(&f, sys_settings_obj.flag2));
+    // finished.
     ensure_fileok(f_sync(&f));
     ensure_fileok(f_close(&f));
     return 1;

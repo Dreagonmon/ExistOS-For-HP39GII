@@ -1,16 +1,20 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "sys_llapi.h"
-#include "screen.h"
-#include "keyboard.h"
+#include "FreeRTOS.h"
 #include "fs_utils.h"
 #include "sys_settings.h"
+#include "sys_llapi.h"
 // ui
+#include "screen.h"
+#include "keyboard.h"
 #include "u8str.h"
 #include "ui_const.h"
 #include "ui_utils.h"
+#include "ui_sysbar.h"
 #include "ui_dialog.h"
+#include "font16x16.h"
+#include "sys_clock.h"
 
 /* Const Text Define */
 U8StringGroup TEXTG_NOTICE_FS_NEED_FORMAT =
@@ -22,6 +26,18 @@ U8StringGroup TEXTG_NOTICE_DATA_LOST =
 U8StringGroup TEXTG_FORMAT_FAILED =
     "Failed to format Flash.\0"
     "Flash格式化失败.\0";
+U8StringGroup TEXTG_WELCOME_MESSAGE =
+    "HP 39gii UselessOS\0"
+    "HP 39gii 天地無用OS\0";
+U8StringGroup TEXTG_OFF =
+    "OFF\0"
+    "关机\0";
+U8StringGroup TEXTG_APPS =
+    "Apps\0"
+    "应用\0";
+U8StringGroup TEXTG_SETTINGS =
+    "Settings\0"
+    "设置\0";
 
 /* System Init */
 void main_init() {
@@ -48,34 +64,49 @@ void main_init() {
         init_default_settings();
     }
     ui_set_lang(sys_settings->ui_lang);
+    // allow auto slowdown
+    ll_cpu_slowdown_enable(sys_settings->cpu_slowdown_mode);
+    // charge
+    if (sys_settings->flag1 & sys_FLAG1_ENABLE_CHARGE_AT_BOOT) {
+        ll_charge_enable(true);
+    }
     // init end
 }
 
-void display() {
+void render_content() {
+    ui_text_area(
+        font16x16_unifont, ui_trs(TEXTG_WELCOME_MESSAGE), get_frame_buffer(),
+        ui_CONTENT_X, ui_CONTENT_Y, ui_CONTENT_W, ui_CONTENT_H,
+        ui_ALIGN_HCENTER | ui_ALIGN_VCENTER,
+        COLOR_SET, COLOR_CLEAR
+    );
+}
+
+void main_ui() {
+    ui_sysbar_title("HP 39gii");
+    render_content();
+    ui_sysbar_fn_clear();
+    ui_sysbar_fn_set_cell(0, ui_trs(TEXTG_OFF));
+    ui_sysbar_fn_text(1, 4, ui_trs(TEXTG_APPS));
+    ui_sysbar_fn_set_cell(5, ui_trs(TEXTG_SETTINGS));
+    screen_flush();
     // test
-    ui_set_lang(ui_LANG_CHS);
-    uint8_t rst = ui_dialog_confirm("对话框", "请选择是否继续执行");
-    if (rst) {
-        ui_dialog_alert("操作结果", "你选择了继续执行");
-    } else {
-        ui_dialog_alert("操作结果", "你取消了执行");
-    }
 }
 
 void main() {
     main_init();
-    // test below
-    display();
-    printf("Hello Dragon\n");
-    printf("================================================\n");
-    ll_charge_enable(true);
+    main_ui();
     while (1) {
         uint32_t kevt = kbd_query_event();
         if (kbd_action(kevt) != kbd_ACTION_NOP) {
             printf("kevent: %u %u\n", kbd_action(kevt), kbd_value(kevt));
         }
-        if (kbd_check_key(kbd_K_ON)) {
-            ll_power_off();
+        if (kbd_action(kevt) == kbd_ACTION_DOWN) {
+            uint16_t kode = kbd_value(kevt);
+            if (kode == kbd_K_F1 || kode == kbd_K_ON) {
+                ll_power_off();
+            }
         }
+        sleep_ms(100);
     }
 }
