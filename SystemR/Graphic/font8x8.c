@@ -7253,7 +7253,7 @@ uint8_t font8x8_get_char_image(bmf_BitmapFont *font, uint32_t unicode, uint8_t *
     f_offset += 3 * area;
     seek(file, f_offset);
     read(file, buffer, 3);
-    uint16_t block_offset = (buffer[0] << 8) | buffer[1];
+    uint16_t block_offset = (area == 0) ? 0 : ((buffer[0] << 8) | buffer[1]);
     uint8_t area_size = buffer[2];
     // search char_data
     f_offset = BASE_OFFSET + (block_offset * (FONT_DATA_SIZE + 1));
