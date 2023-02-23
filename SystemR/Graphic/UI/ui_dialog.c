@@ -53,7 +53,7 @@ uint8_t __ui_dialog(U8String title, U8String content, uint8_t is_alert) {
                 return 1;
             }
         } else {
-            sleep_ms(100);
+            sleep_ms(30);
         }
     }
 }

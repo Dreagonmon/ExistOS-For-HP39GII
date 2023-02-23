@@ -18,6 +18,8 @@
     extern "C" {
 #endif
 
+extern bool g_system_in_emulator;
+
 //    Return Type       Function Name       Parameters                               LL SWI Number
 DECDEF_LLSWI(void,         ll_put_str,            (char *s)                               ,LL_SWI_WRITE_STRING1           );
 DECDEF_LLSWI(void,         ll_put_str2,           (char *s, uint32_t len)                 ,LL_SWI_WRITE_STRING2           );

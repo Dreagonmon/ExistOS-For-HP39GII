@@ -101,6 +101,7 @@ static void render_item(U8String item, uint16_t pos_in_page, uint8_t is_invert_c
 static int16_t __ui_menu_select(U8String title, U8StringGroup items, int16_t init_index, uint8_t mode) {
     const uint8_t LIST_PAGE_SIZE = (mode == 2) ? (2 * LINES) : LINES;
     uint8_t fn_bar_flag = 0;
+    gfb_fill_rect(get_frame_buffer(), 0, 0, SCR_W, SCR_H, COLOR_CLEAR);
     if (title != NULL && u8_string_size(title) > 0) {
         ui_sysbar_title(title);
     } else {
@@ -253,7 +254,7 @@ static int16_t __ui_menu_select(U8String title, U8StringGroup items, int16_t ini
             screen_flush();
         }
         if (act != kbd_ACTION_DOWN) {
-            sleep_ms(100);
+            sleep_ms(30);
         }
     }
 }

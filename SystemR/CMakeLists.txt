@@ -15,7 +15,6 @@ include_directories(./Graphic/UI)
 include_directories(./Keyboard)
 include_directories(./Utils)
 include_directories(./Apps)
-include_directories(./Settings)
 
 aux_source_directory(.                                             SYS_SRCS)
 aux_source_directory(./RTOSCore                                    SYS_SRCS)
@@ -30,7 +29,8 @@ aux_source_directory(./Graphic/UI                                  SYS_SRCS)
 aux_source_directory(./Keyboard                                    SYS_SRCS)
 aux_source_directory(./Utils                                       SYS_SRCS)
 aux_source_directory(./Apps                                        SYS_SRCS)
-aux_source_directory(./Settings                                    SYS_SRCS)
+# apps
+aux_source_directory(./Apps/Settings                               SYS_SRCS)
 
 add_executable(sys.elf ${SYS_SRCS})
 

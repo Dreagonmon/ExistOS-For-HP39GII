@@ -14,33 +14,39 @@
 #include "ui_sysbar.h"
 #include "ui_dialog.h"
 #include "font16x16.h"
+#include "font8x8.h"
 #include "sys_clock.h"
+// apps
+#include "Settings/app_settings.h"
 
 /* Const Text Define */
-U8StringGroup TEXTG_NOTICE_FS_NEED_FORMAT =
+static U8StringGroup TEXTG_NOTICE_FS_NEED_FORMAT =
     "Failed to init Flash.\nDo you want to format it?\0"
     "初始化Flash存储失败.\n你想要格式化它吗?\0";
-U8StringGroup TEXTG_NOTICE_DATA_LOST =
+static U8StringGroup TEXTG_NOTICE_DATA_LOST =
     "Are you sure?\nAll your data will lose.\0"
     "你确定吗?\n所有的数据都会丢失.\0";
-U8StringGroup TEXTG_FORMAT_FAILED =
+static U8StringGroup TEXTG_FORMAT_FAILED =
     "Failed to format Flash.\0"
     "Flash格式化失败.\0";
-U8StringGroup TEXTG_WELCOME_MESSAGE =
+static U8StringGroup TEXTG_WELCOME_MESSAGE =
     "HP 39gII UselessOS\0"
     "HP 39gII 天地無用OS\0";
-U8StringGroup TEXTG_OFF =
+static U8StringGroup TEXTG_OFF =
     "OFF\0"
     "关机\0";
-U8StringGroup TEXTG_APPS =
+static U8StringGroup TEXTG_APPS =
     "Apps\0"
     "应用\0";
-U8StringGroup TEXTG_SETTINGS =
+static U8StringGroup TEXTG_SETTINGS =
     "Settings\0"
     "设置\0";
+static U8StringGroup TEXTG_CHARGING1 =
+    "= Charging =\0"
+    "= 正在充电 =\0";
 
 /* System Init */
-void main_init() {
+static void main_init() {
     // init screen
     screen_init_mono();
     // init file system
@@ -73,16 +79,27 @@ void main_init() {
     // init end
 }
 
-void render_content() {
+static void render_content() {
+    int16_t off_y = 0;
     ui_text_area(
         font16x16_unifont, ui_trs(TEXTG_WELCOME_MESSAGE), get_frame_buffer(),
-        ui_CONTENT_X, ui_CONTENT_Y, ui_CONTENT_W, ui_CONTENT_H,
+        ui_CONTENT_X, ui_CONTENT_Y + off_y, ui_CONTENT_W, ui_CONTENT_H - font8x8_quan->char_height,
         ui_ALIGN_HCENTER | ui_ALIGN_VCENTER,
         COLOR_SET, COLOR_CLEAR
     );
+    off_y += ui_CONTENT_H - font8x8_quan->char_height;
+    if (ll_get_charge_status()) {
+        ui_text_area(
+            font8x8_quan, ui_trs(TEXTG_CHARGING1), get_frame_buffer(),
+            ui_CONTENT_X, ui_CONTENT_Y + off_y, ui_CONTENT_W, font8x8_quan->char_height,
+            ui_ALIGN_HCENTER | ui_ALIGN_VCENTER,
+            COLOR_SET, COLOR_CLEAR
+        );
+        off_y += font8x8_quan->char_height;
+    }
 }
 
-void main_ui() {
+static void main_ui() {
     ui_sysbar_title("HP 39gII");
     render_content();
     ui_sysbar_fn_clear();
@@ -103,11 +120,21 @@ void main() {
         }
         if (kbd_action(kevt) == kbd_ACTION_DOWN) {
             uint16_t kode = kbd_value(kevt);
-            if (kode == kbd_K_F1 || kode == kbd_K_ON) {
+            if (kode == kbd_K_F1 || (kode == kbd_K_ON && check_indicator(INDICATE_LEFT))) {
                 ll_power_off();
+                ll_power_off();
+            } else if (kode == kbd_K_F6) {
+                app_run_settings();
+                main_ui();
+            } else if (kode == kbd_K_SHIFT) {
+                set_indicator(INDICATE_LEFT, (!check_indicator(INDICATE_LEFT)));
+            } else {
+                if (check_indicator(INDICATE_LEFT)) {
+                    set_indicator(INDICATE_LEFT, (!check_indicator(INDICATE_LEFT)));
+                }
             }
         } else {
-            sleep_ms(100);
+            sleep_ms(30);
         }
     }
 }
