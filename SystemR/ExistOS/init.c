@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <malloc.h>
 
-#include "timestamp.h"
 #include "sys_llapi.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -36,7 +35,6 @@ extern unsigned int __init_data;
 extern unsigned int __data_start;
 extern unsigned int __data_end;
 
-const char __attribute__((section(".sysinfo"))) system_build_time[] = _TIMEZ_;//__DATE__ " " __TIME__;
 extern uint32_t SYSTEM_STACK;
 
 bool MemorySwapEnable = false;

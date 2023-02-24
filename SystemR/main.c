@@ -80,6 +80,7 @@ static void main_init() {
 }
 
 static void render_content() {
+    gfb_fill_rect(get_frame_buffer(), ui_CONTENT_X, ui_CONTENT_Y, ui_CONTENT_W, ui_CONTENT_H, COLOR_CLEAR);
     int16_t off_y = 0;
     ui_text_area(
         font16x16_unifont, ui_trs(TEXTG_WELCOME_MESSAGE), get_frame_buffer(),

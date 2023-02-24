@@ -1,5 +1,4 @@
 
-
 include_directories(./)
 include_directories(./Config)
 include_directories(./RTOSCore)
@@ -29,8 +28,9 @@ aux_source_directory(./Graphic/UI                                  SYS_SRCS)
 aux_source_directory(./Keyboard                                    SYS_SRCS)
 aux_source_directory(./Utils                                       SYS_SRCS)
 aux_source_directory(./Apps                                        SYS_SRCS)
-# apps
-aux_source_directory(./Apps/Settings                               SYS_SRCS)
+
+# ==== add apps here ====
+add_subdirectory(./Apps/Settings)
 
 add_executable(sys.elf ${SYS_SRCS})
 
@@ -47,29 +47,9 @@ target_compile_options(sys.elf PRIVATE -mtune=arm926ej-s -mcpu=arm926ej-s -mlitt
 )
 
 target_link_libraries(sys.elf -lm -lc -lrdimon -lgcc -lstdc++ -nostartfiles
-#tjpgd
-#${CMAKE_SOURCE_DIR}/Libs/libkcasgui.libcpp
-#${CMAKE_SOURCE_DIR}/Libs/libcas.libcpp
-#${CMAKE_SOURCE_DIR}/Libs/libtommath.libcpp
-#${CMAKE_SOURCE_DIR}/Libs/libgmp.libcpp   
+# ==== add apps here ====
+app_settings
 )
-
-# build time in UTC ISO 8601
-FILE (WRITE ${CMAKE_BINARY_DIR}/timestamp.cmake "STRING(TIMESTAMP TIMEZ UTC)\n")
-FILE (APPEND ${CMAKE_BINARY_DIR}/timestamp.cmake "FILE(WRITE timestamp.h \"#ifndef TIMESTAMP_H\\n\")\n")
-FILE (APPEND ${CMAKE_BINARY_DIR}/timestamp.cmake "FILE(APPEND timestamp.h \"#define TIMESTAMP_H\\n\\n\")\n")
-FILE (APPEND ${CMAKE_BINARY_DIR}/timestamp.cmake "FILE(APPEND timestamp.h \"#define _TIMEZ_ \\\"\${TIMEZ}\\\"\\n\\n\")\n")
-FILE (APPEND ${CMAKE_BINARY_DIR}/timestamp.cmake "FILE(APPEND timestamp.h \"#endif // TIMESTAMP_H\\n\")\n")
-
-add_custom_target (
-    timestamp
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_BINARY_DIR}/timestamp.cmake
-    ADD_DEPENDENCIES ${CMAKE_BINARY_DIR}/timestamp.cmake
-)
-
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
-add_dependencies(sys.elf timestamp)
 
 add_custom_command(TARGET sys.elf  POST_BUILD
     COMMAND arm-none-eabi-size ${CMAKE_CURRENT_BINARY_DIR}/sys.elf 
@@ -88,5 +68,3 @@ add_custom_target(
     COMMAND sudo ${CMAKE_SOURCE_DIR}/tools/edb -r -s -f ${CMAKE_CURRENT_BINARY_DIR}/ExistOS.sys 1984
     DEPENDS ExistOS.sys
 )
-
-add_dependencies(edb_flash_sysr timestamp)
