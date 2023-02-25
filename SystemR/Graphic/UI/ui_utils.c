@@ -3,8 +3,22 @@
 #include "framebuf.h"
 #include "ui_const.h"
 #include "u8str.h"
+#include "keyboard.h"
 
 #define MAX_LINES 32
+
+const static uint16_t NUM_KEY_CODE[] = {
+    kbd_K_0,
+    kbd_K_1,
+    kbd_K_2,
+    kbd_K_3,
+    kbd_K_4,
+    kbd_K_5,
+    kbd_K_6,
+    kbd_K_7,
+    kbd_K_8,
+    kbd_K_9
+};
 
 static uint8_t ui_lang = ui_LANG_ENG;
 
@@ -55,6 +69,17 @@ void ui_text_area(bmf_BitmapFont *font, U8String text, gfb_FrameBuffer *frame, i
         off_y += font->char_height;
         p_off += lws[cur_lines];
     }
+}
+
+uint8_t ui_get_key_number(uint16_t key_code) {
+    uint8_t i = 0;
+    while (i < 10) {
+        if (key_code == NUM_KEY_CODE[i]) {
+            return i;
+        }
+        i ++;
+    }
+    return ui_NOT_A_NUM_KEY;
 }
 
 void ui_set_lang(uint8_t lang) {

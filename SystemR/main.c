@@ -42,8 +42,8 @@ static U8StringGroup TEXTG_SETTINGS =
     "Settings\0"
     "设置\0";
 static U8StringGroup TEXTG_CHARGING1 =
-    "= Charging =\0"
-    "= 正在充电 =\0";
+    "= USB Charging Enabled =\0"
+    "= 已启用USB充电 =\0";
 
 /* System Init */
 static void main_init() {

@@ -16,52 +16,29 @@
 #define INDEX_NUM_W        16
 #define FLAG_HAS_LAST_PAGE 0b00000001
 #define FLAG_HAS_NEXT_PAGE 0b00000010
+#define FLAG_CAN_CONFIRM   0b00000100
 
 #define MAX_P              (INT16_MAX - 2)
 #define SPECIAL_P          UINT16_MAX
 #define SPECIAL_P2         (UINT16_MAX - 1)
-#define NOT_A_NUM_KEY      UINT8_MAX
 
-const static uint16_t NUM_KEY_CODE[] = {
-    kbd_K_0,
-    kbd_K_1,
-    kbd_K_2,
-    kbd_K_3,
-    kbd_K_4,
-    kbd_K_5,
-    kbd_K_6,
-    kbd_K_7,
-    kbd_K_8,
-    kbd_K_9
-};
-
-static uint8_t get_key_number(uint16_t key_code) {
-    uint8_t i = 0;
-    while (i < 10) {
-        if (key_code == NUM_KEY_CODE[i]) {
-            return i;
-        }
-        i ++;
-    }
-    return NOT_A_NUM_KEY;
-}
 
 static void update_fn_bar(uint8_t flags) {
     ui_sysbar_fn_clear();
     ui_sysbar_fn_set_cell(0, ui_trs(ui_TEXTG_CANCEL));
-    ui_sysbar_fn_set_cell(5, ui_trs(ui_TEXTG_CONFIRM));
+    if (flags & FLAG_CAN_CONFIRM) {
+        ui_sysbar_fn_set_cell(5, ui_trs(ui_TEXTG_CONFIRM));
+    } else {
+        ui_sysbar_fn_set_cell(5, ui_TEXT_EMPTY);
+    }
     if (flags & FLAG_HAS_LAST_PAGE) {
-        // ui_sysbar_fn_set_cell(1, ui_trs(ui_TEXTG_PAGE_UP));
         ui_sysbar_fn_text(1, 2, ui_trs(ui_TEXTG_PAGE_UP));
     } else {
-        // ui_sysbar_fn_set_cell(1, ui_TEXT_EMPTY);
         ui_sysbar_fn_text(1, 2, ui_trs(ui_TEXT_EMPTY));
     }
     if (flags & FLAG_HAS_NEXT_PAGE) {
-        // ui_sysbar_fn_set_cell(4, ui_trs(ui_TEXTG_PAGE_DOWN));
         ui_sysbar_fn_text(3, 2, ui_trs(ui_TEXTG_PAGE_DOWN));
     } else {
-        // ui_sysbar_fn_set_cell(4, ui_TEXT_EMPTY);
         ui_sysbar_fn_text(3, 2, ui_trs(ui_TEXT_EMPTY));
     }
 }
@@ -107,7 +84,6 @@ static int16_t __ui_menu_select(U8String title, U8StringGroup items, int16_t ini
     } else {
         ui_sysbar_title(ui_TEXT_EMPTY);
     }
-    update_fn_bar(fn_bar_flag);
     uint16_t items_count = u8_string_group_size(items);
     uint16_t pointer = (init_index >= 0) ? (init_index % items_count) : SPECIAL_P; // point to the real pos in u8sgroup
     uint16_t page_start = (init_index >= 0) ? (pointer / LIST_PAGE_SIZE) * LIST_PAGE_SIZE : 0;
@@ -209,7 +185,7 @@ static int16_t __ui_menu_select(U8String title, U8StringGroup items, int16_t ini
                     }
                 }
             } else {
-                uint8_t num = get_key_number(kode);
+                uint8_t num = ui_get_key_number(kode);
                 if (num < LIST_PAGE_SIZE) {
                     uint16_t selected = page_start + num;
                     if (selected < items_count) {
@@ -239,6 +215,7 @@ static int16_t __ui_menu_select(U8String title, U8StringGroup items, int16_t ini
                 fn_bar_flag = 0;
                 if (page_start >= LIST_PAGE_SIZE) fn_bar_flag |= FLAG_HAS_LAST_PAGE;
                 if (page_start + LIST_PAGE_SIZE < items_count) fn_bar_flag |= FLAG_HAS_NEXT_PAGE;
+                if (pointer != SPECIAL_P) fn_bar_flag |= FLAG_CAN_CONFIRM;
                 update_fn_bar(fn_bar_flag);
             } else {
                 // render only necessary
@@ -249,6 +226,8 @@ static int16_t __ui_menu_select(U8String title, U8StringGroup items, int16_t ini
                 last_pointer = pointer - page_start;
                 U8String item = u8_string_group_get(items, pointer);
                 render_item(item, last_pointer, 1, mode);
+                fn_bar_flag |= FLAG_CAN_CONFIRM;
+                update_fn_bar(fn_bar_flag);
             }
             tmp_pointer = 0;
             screen_flush();
