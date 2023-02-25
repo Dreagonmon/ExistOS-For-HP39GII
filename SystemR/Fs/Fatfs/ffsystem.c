@@ -188,7 +188,7 @@ Seconds 	5 bits (0~29, 2-second increments)
 */
 
 uint32_t get_fattime() {
-	int64_t tms = rtc_time() & INT64_MAX;
+	int64_t tms = rtc_time_local() & INT64_MAX;
 	struct utm *now = pvPortMalloc(sizeof(struct utm));
 	if (now == NULL) {
 		return 0; // mem full

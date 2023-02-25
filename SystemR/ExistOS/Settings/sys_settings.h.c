@@ -6,6 +6,9 @@
  * 2      | 8    | rtc_offset
  * 10     | 1    | ui_lang
  * 11     | 1    | cpu_slowdown_mode
+ * 12     | 1    | flag1
+ * 13     | 1    | flag2
+ * 14     | 1    | timezone_offset
 */
 #include "sys_settings.h"
 #include "ff.h"
@@ -15,7 +18,7 @@
 #define ensure_true(x) ({ if (!x) return 0; })
 
 static const TCHAR SAVE_FILE_PATH[] = "/SYST.BIN";
-static const uint16_t CURRENT_VERSION = 1;
+static const uint16_t CURRENT_VERSION = 2;
 struct sys_settings sys_settings_obj = { .settings_inited = 0 };
 struct sys_settings *sys_settings = &sys_settings_obj;
 
@@ -158,6 +161,13 @@ uint8_t init_settings() {
         ensure_true(read_u8(&f, &val8));
         sys_settings_obj.flag2 = val8;
     }
+    // timezone_offset
+    if (version >= 2) {
+        ensure_true(read_u8(&f, &val8));
+        sys_settings_obj.timezone_offset = (int8_t) val8;
+    } else {
+        sys_settings_obj.timezone_offset = 0;
+    }
     ensure_fileok(f_close(&f));
     sys_settings_obj.settings_version = CURRENT_VERSION;
     sys_settings_obj.settings_inited = 1;
@@ -171,6 +181,7 @@ void init_default_settings() {
     sys_settings_obj.cpu_slowdown_mode = 0;
     sys_settings_obj.flag1 = 0;
     sys_settings_obj.flag2 = 0;
+    sys_settings_obj.timezone_offset = 0;
     sys_settings_obj.settings_inited = 1;
 }
 
@@ -189,6 +200,8 @@ uint8_t save_settings() {
     ensure_true(write_u8(&f, sys_settings_obj.flag1));
     // flag2
     ensure_true(write_u8(&f, sys_settings_obj.flag2));
+    // timezone_offset
+    ensure_true(write_u8(&f, sys_settings_obj.timezone_offset));
     // finished.
     ensure_fileok(f_sync(&f));
     ensure_fileok(f_close(&f));

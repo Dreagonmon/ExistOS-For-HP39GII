@@ -9,6 +9,13 @@ uint64_t rtc_time() {
     return ll_rtc_get_sec();
 }
 
+uint64_t rtc_time_local() {
+    if (sys_settings->settings_inited) {
+        return rtc_time() + ((uint64_t)(3600 * sys_settings->timezone_offset));
+    }
+    return rtc_time();
+}
+
 int32_t ticks_s() {
     return ll_rtc_get_sec() & INT32_MAX;
 }

@@ -9,6 +9,7 @@ struct sys_settings {
     uint8_t cpu_slowdown_mode;
     uint8_t flag1;
     uint8_t flag2;
+    int8_t timezone_offset;
     uint8_t settings_inited;
 };
 
