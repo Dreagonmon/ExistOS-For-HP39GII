@@ -34,6 +34,11 @@ add_subdirectory(./Apps/Settings)
 
 add_executable(sys.elf ${SYS_SRCS})
 
+target_link_libraries(sys.elf -lm -lc -lrdimon -lgcc -nostartfiles
+# ==== add apps here ====
+app_settings
+)
+
 set(LINKER_SCRIPT 
     ${CMAKE_SOURCE_DIR}/Script/sys_ld.script
 )
@@ -44,11 +49,6 @@ target_compile_options(sys.elf PRIVATE -mtune=arm926ej-s -mcpu=arm926ej-s -mlitt
     -Os -pipe
     -DHP39
     -fexec-charset=UTF-8
-)
-
-target_link_libraries(sys.elf -lm -lc -lrdimon -lgcc -lstdc++ -nostartfiles
-# ==== add apps here ====
-app_settings
 )
 
 add_custom_command(TARGET sys.elf  POST_BUILD

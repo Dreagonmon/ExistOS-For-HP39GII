@@ -3,7 +3,7 @@ include_directories(./)
 
 aux_source_directory(./                      SRCS)
 
-add_library(app_settings ${SRCS})
+add_library(app_settings STATIC ${SRCS})
 
 # build time in UTC ISO 8601
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
