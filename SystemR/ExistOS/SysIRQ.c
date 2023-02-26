@@ -8,7 +8,6 @@
 
 #include "llapi_code.h"
 #include "sys_llapi.h"
-#include "VROMLoader.h"
 
 uint32_t Timer_Count = 0;
 
@@ -53,8 +52,7 @@ volatile void IRQ_ISR(uint32_t IRQNum, uint32_t par1, uint32_t par2, uint32_t pa
         break;
 
     case LL_IRQ_MMU:
-        VROMIRQLoad(par1);
-        //printf("MMU Fault:%08x\n", par1);
+        printf("MMU Fault: %08x\n", par1);
 
     default:
         break;
