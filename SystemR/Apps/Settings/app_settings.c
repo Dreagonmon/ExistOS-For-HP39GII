@@ -166,7 +166,7 @@ static void change_date_and_time(int16_t sel) {
                                 }
                                 if (ui_dialog_confirm(ui_trs(ui_TEXTG_INFO), ui_trs(TEXTG_CONFIRM_SET_DATETIME))) {
                                     if (g_system_in_emulator) {
-                                        sys_settings->timezone_offset = 0;
+                                        sys_settings->timezone_offset = tz_offset;
                                         sys_settings->rtc_offset = (tms - ll_rtc_get_sec());
                                     } else {
                                         ll_rtc_set_sec(0);

@@ -11,49 +11,51 @@
  * 14     | 1    | timezone_offset
 */
 #include "sys_settings.h"
-#include "ff.h"
+#include "fs_utils.h"
+#include "lfs.h"
 
-#define ensure_fileok(rst) ({ if (rst != FR_OK) return 0; })
+// used in single read and write
+#define ensure_writeok(rst) ({ if (rst < 0) return 0; })
+#define ensure_readok(rst) ({ if (rst < 0) return 0; })
 #define ensure_count(wrc, expect) ({ if (wrc != expect) return 0; })
-#define ensure_true(x) ({ if (!x) return 0; })
+// used in functions
+#define ensure_fsok(rst) ({ if (rst < 0) goto failed; })
+#define ensure_true(x) ({ if (!x) goto failed; })
 
-static const TCHAR SAVE_FILE_PATH[] = "/SYST.BIN";
+static const char SAVE_FILE_PATH[] = "/SYSCONF.BIN";
 static const uint16_t CURRENT_VERSION = 2;
 struct sys_settings sys_settings_obj = { .settings_inited = 0 };
 struct sys_settings *sys_settings = &sys_settings_obj;
 
-static uint8_t write_u8(FIL *f, uint16_t val) {
+static uint8_t write_u8(lfs_file_t *f, uint16_t val) {
     uint8_t buf[1] = {0};
     buf[0] = (val >> 0) & 0xFF;
-    UINT writen = 0;
-    FRESULT rst = f_write(f, buf, 1, &writen);
-    ensure_fileok(rst);
+    lfs_ssize_t writen = lfs_file_write(get_fs_obj(), f, buf, 1);
+    ensure_writeok(writen);
     ensure_count(writen, 1);
     return 1;
 }
-static uint8_t write_u16(FIL *f, uint16_t val) {
+static uint8_t write_u16(lfs_file_t *f, uint16_t val) {
     uint8_t buf[2] = {0};
     buf[0] = (val >> 8) & 0xFF;
     buf[1] = (val >> 0) & 0xFF;
-    UINT writen = 0;
-    FRESULT rst = f_write(f, buf, 2, &writen);
-    ensure_fileok(rst);
+    lfs_ssize_t writen = lfs_file_write(get_fs_obj(), f, buf, 2);
+    ensure_writeok(writen);
     ensure_count(writen, 2);
     return 1;
 }
-static uint8_t write_u32(FIL *f, uint32_t val) {
+static uint8_t write_u32(lfs_file_t *f, uint32_t val) {
     uint8_t buf[4] = {0};
     buf[0] = (val >> 24) & 0xFF;
     buf[1] = (val >> 16) & 0xFF;
     buf[2] = (val >> 8) & 0xFF;
     buf[3] = (val >> 0) & 0xFF;
-    UINT writen = 0;
-    FRESULT rst = f_write(f, buf, 4, &writen);
-    ensure_fileok(rst);
+    lfs_ssize_t writen = lfs_file_write(get_fs_obj(), f, buf, 4);
+    ensure_writeok(writen);
     ensure_count(writen, 4);
     return 1;
 }
-static uint8_t write_u64(FIL *f, uint64_t val) {
+static uint8_t write_u64(lfs_file_t *f, uint64_t val) {
     uint8_t buf[8] = {0};
     buf[0] = (val >> 56) & 0xFF;
     buf[1] = (val >> 48) & 0xFF;
@@ -63,28 +65,25 @@ static uint8_t write_u64(FIL *f, uint64_t val) {
     buf[5] = (val >> 16) & 0xFF;
     buf[6] = (val >> 8) & 0xFF;
     buf[7] = (val >> 0) & 0xFF;
-    UINT writen = 0;
-    FRESULT rst = f_write(f, buf, 8, &writen);
-    ensure_fileok(rst);
+    lfs_ssize_t writen = lfs_file_write(get_fs_obj(), f, buf, 8);
+    ensure_writeok(writen);
     ensure_count(writen, 8);
     return 1;
 }
-static uint8_t read_u8(FIL *f, uint8_t *val) {
+static uint8_t read_u8(lfs_file_t *f, uint8_t *val) {
     uint8_t buf[1] = {0};
-    UINT read = 0;
-    FRESULT rst = f_read(f, buf, 1, &read);
-    ensure_fileok(rst);
+    lfs_ssize_t read = lfs_file_read(get_fs_obj(), f, buf, 1);
+    ensure_readok(read);
     ensure_count(read, 1);
     uint16_t v = 0;
     v |= (uint16_t)(buf[0]) << 0;
     *val = v;
     return 1;
 }
-static uint8_t read_u16(FIL *f, uint16_t *val) {
+static uint8_t read_u16(lfs_file_t *f, uint16_t *val) {
     uint8_t buf[2] = {0};
-    UINT read = 0;
-    FRESULT rst = f_read(f, buf, 2, &read);
-    ensure_fileok(rst);
+    lfs_ssize_t read = lfs_file_read(get_fs_obj(), f, buf, 2);
+    ensure_readok(read);
     ensure_count(read, 2);
     uint16_t v = 0;
     v |= (uint16_t)(buf[0]) << 8;
@@ -92,11 +91,10 @@ static uint8_t read_u16(FIL *f, uint16_t *val) {
     *val = v;
     return 1;
 }
-static uint8_t read_u32(FIL *f, uint32_t *val) {
+static uint8_t read_u32(lfs_file_t *f, uint32_t *val) {
     uint8_t buf[4] = {0};
-    UINT read = 0;
-    FRESULT rst = f_read(f, buf, 4, &read);
-    ensure_fileok(rst);
+    lfs_ssize_t read = lfs_file_read(get_fs_obj(), f, buf, 4);
+    ensure_readok(read);
     ensure_count(read, 4);
     uint32_t v = 0;
     v |= (uint32_t)(buf[0]) << 24;
@@ -106,11 +104,10 @@ static uint8_t read_u32(FIL *f, uint32_t *val) {
     *val = v;
     return 1;
 }
-static uint8_t read_u64(FIL *f, uint64_t *val) {
+static uint8_t read_u64(lfs_file_t *f, uint64_t *val) {
     uint8_t buf[8] = {0};
-    UINT read = 0;
-    FRESULT rst = f_read(f, buf, 8, &read);
-    ensure_fileok(rst);
+    lfs_ssize_t read = lfs_file_read(get_fs_obj(), f, buf, 8);
+    ensure_readok(read);
     ensure_count(read, 8);
     uint64_t v = 0;
     v |= ((uint64_t)(buf[0]) << 56);
@@ -126,13 +123,13 @@ static uint8_t read_u64(FIL *f, uint64_t *val) {
 }
 
 uint8_t init_settings() {
-    FIL f;
+    lfs_file_t f;
     uint64_t val64;
     // uint32_t val32;
     uint16_t val16;
     uint8_t val8;
     uint16_t version = 0;
-    ensure_fileok(f_open(&f, SAVE_FILE_PATH, FA_READ | FA_OPEN_EXISTING));
+    if (lfs_file_open(get_fs_obj(), &f, SAVE_FILE_PATH, LFS_O_RDONLY) < 0) return 0;
     // settings_version
     ensure_true(read_u16(&f, &val16));
     version = val16;
@@ -168,10 +165,14 @@ uint8_t init_settings() {
     } else {
         sys_settings_obj.timezone_offset = 0;
     }
-    ensure_fileok(f_close(&f));
+    ensure_fsok(lfs_file_close(get_fs_obj(), &f));
     sys_settings_obj.settings_version = CURRENT_VERSION;
     sys_settings_obj.settings_inited = 1;
     return 1;
+    // failed
+    failed:
+    lfs_file_close(get_fs_obj(), &f);
+    return 0;
 }
 
 void init_default_settings() {
@@ -186,8 +187,8 @@ void init_default_settings() {
 }
 
 uint8_t save_settings() {
-    FIL f;
-    ensure_fileok(f_open(&f, SAVE_FILE_PATH, FA_WRITE | FA_CREATE_ALWAYS));
+    lfs_file_t f;
+    if (lfs_file_open(get_fs_obj(), &f, SAVE_FILE_PATH, LFS_O_WRONLY | LFS_O_CREAT | LFS_O_TRUNC) < 0) return 0;
     // settings_version
     ensure_true(write_u16(&f, CURRENT_VERSION));
     // rtc_offset
@@ -203,7 +204,10 @@ uint8_t save_settings() {
     // timezone_offset
     ensure_true(write_u8(&f, sys_settings_obj.timezone_offset));
     // finished.
-    ensure_fileok(f_sync(&f));
-    ensure_fileok(f_close(&f));
+    ensure_fsok(lfs_file_close(get_fs_obj(), &f));
     return 1;
+    // failed
+    failed:
+    lfs_file_close(get_fs_obj(), &f);
+    return 0;
 }
