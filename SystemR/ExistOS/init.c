@@ -194,9 +194,9 @@ uint32_t getHeapAddr() {
     return (uint32_t)heap;
 }
 
-void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
-    PANIC("SYS StackOverflowHook:%s\n", pcTaskName);
-}
+// void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+//     PANIC("SYS StackOverflowHook:%s\n", pcTaskName);
+// }
 
 void vAssertCalled(char *file, int line) {
     PANIC("SYS ASSERTION FAILED AT %s:%d\n", file, line);
@@ -210,7 +210,7 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
     *pulTimerTaskStackSize = configMINIMAL_STACK_SIZE;
 }
 
-void vApplicationMallocFailedHook() {
+__attribute__((weak)) void vApplicationMallocFailedHook() {
     PANIC("SYS ASSERT: Out of Memory.\n");
 }
 

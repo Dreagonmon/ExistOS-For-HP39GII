@@ -172,11 +172,6 @@ static int16_t __ui_menu_select(U8String title, U8StringGroup items, int16_t ini
             } else if (kode == kbd_K_F1 || kode == kbd_K_F6 || kode == kbd_K_ON || kode == kbd_K_ENTER) {
                 if (pointer <= MAX_P && (kode == kbd_K_F6 || kode == kbd_K_ENTER)) {
                     return (int16_t)(pointer & INT16_MAX);
-                    if (kode == kbd_K_F1 || kode == kbd_K_ON) {
-                        return (int16_t)(-1);
-                    } else {
-                        return (int16_t)(pointer & INT16_MAX);
-                    }
                 } else if (kode == kbd_K_F1 || kode == kbd_K_ON) {
                     if (pointer <= MAX_P) {
                         return (-1) - ((int16_t)(pointer & INT16_MAX));

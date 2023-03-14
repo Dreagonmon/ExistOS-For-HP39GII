@@ -13,6 +13,7 @@ include_directories(./Graphic)
 include_directories(./Graphic/UI)
 include_directories(./Keyboard)
 include_directories(./Utils)
+include_directories(./Utils/Collectc)
 include_directories(./Apps)
 
 aux_source_directory(.                                             SYS_SRCS)
@@ -27,6 +28,7 @@ aux_source_directory(./Graphic                                     SYS_SRCS)
 aux_source_directory(./Graphic/UI                                  SYS_SRCS)
 aux_source_directory(./Keyboard                                    SYS_SRCS)
 aux_source_directory(./Utils                                       SYS_SRCS)
+aux_source_directory(./Utils/Collectc                              SYS_SRCS)
 aux_source_directory(./Apps                                        SYS_SRCS)
 
 # ==== add apps here ====
