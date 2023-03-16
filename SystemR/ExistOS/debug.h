@@ -19,5 +19,5 @@
 uint32_t getHeapAllocateSize(void);
 
 #define MEM_USED(label) printf("MEM %s: %ld\n", label, getHeapAllocateSize())
-#define MEM_MALLOC(p) printf("MEM Alloc: %p\n", p)
-#define MEM_FREE(p) printf("MEM Free: %p\n", p)
+#define MEM_ACTION_MALLOC(p) printf("MEM ACTION Alloc: %p\n", p)
+#define MEM_ACTION_FREE(p) printf("MEM ACTION Free: %p\n", p)

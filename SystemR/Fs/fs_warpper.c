@@ -39,6 +39,12 @@ int _open_r(struct _reent *pReent, const char *file, int flags, int mode) {
     return -1;
 }
 
+int _close_r(struct _reent *pReent, int fd) {
+    pReent->_errno = ENOTSUP;
+    printf("_close_r\n");
+    return -1;
+}
+
 _ssize_t _read_r(struct _reent *pReent, int fd, void *ptr, size_t len) {
     pReent->_errno = ENOTSUP;
     printf("_read_r\n");

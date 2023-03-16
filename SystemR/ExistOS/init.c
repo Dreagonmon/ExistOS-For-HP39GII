@@ -78,12 +78,14 @@ void volatile _init_sys() {
     g_system_symtab_hash = ((uint32_t *)(_init_sys))[3];
 
     // init memory
-    uint32_t free, total, total_comp;
-    total_comp = ll_mem_phy_info(&free, &total);
-    if (total_comp > OnChipMemorySize) {
-        OnChipMemorySize = total_comp;
-    }
-    SwapMemorySize = ll_mem_swap_size();
+    OnChipMemorySize = BASIC_RAM_SIZE;
+    // uint32_t free, total, total_comp;
+    // total_comp = ll_mem_phy_info(&free, &total);
+    // if (total_comp > OnChipMemorySize) {
+    //     OnChipMemorySize = total_comp;
+    // }
+    SwapMemorySize = 0;
+    // SwapMemorySize = ll_mem_swap_size();
 
     // init IRQ
     ll_set_irq_stack((uint32_t)&SYSTEM_STACK);
@@ -168,31 +170,26 @@ fail:
     return (caddr_t)-1;
 }
 
-size_t getOnChipHeapAllocated() {
-    if ((uint32_t)heap > RAM_BASE + OnChipMemorySize) {
-        return OnChipMemorySize;
-    } else {
-        return (uint32_t)heap - ((uint32_t)&__HEAP_START);
-    }
-}
+// size_t getOnChipHeapAllocated() {
+//     if ((uint32_t)heap > RAM_BASE + OnChipMemorySize) {
+//         return OnChipMemorySize;
+//     } else {
+//         return (uint32_t)heap - ((uint32_t)&__HEAP_START);
+//     }
+// }
 
-size_t getSwapMemHeapAllocated() {
-    if ((uint32_t)heap > RAM_BASE + OnChipMemorySize) {
-        return (uint32_t)heap - RAM_BASE - OnChipMemorySize;
+// size_t getSwapMemHeapAllocated() {
+//     if ((uint32_t)heap > RAM_BASE + OnChipMemorySize) {
+//         return (uint32_t)heap - RAM_BASE - OnChipMemorySize;
 
-    } else {
-        return 0;
-    }
-}
+//     } else {
+//         return 0;
+//     }
+// }
 
-uint32_t getHeapAllocateSize() {
-    struct mallinfo info = mallinfo();
-    return info.uordblks;
-}
-
-uint32_t getHeapAddr() {
-    return (uint32_t)heap;
-}
+// uint32_t getHeapAddr() {
+//     return (uint32_t)heap;
+// }
 
 // void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
 //     PANIC("SYS StackOverflowHook:%s\n", pcTaskName);
@@ -216,11 +213,6 @@ __attribute__((weak)) void vApplicationMallocFailedHook() {
 
 void vApplicationIdleHook(void) {
     ll_system_idle();
-}
-
-int _close_r(struct _reent *pReent, int fd) {
-    pReent->_errno = ENOTSUP;
-    return -1;
 }
 
 int _execve_r(struct _reent *pReent, const char *filename, char *const *argv, char *const *envp) {
@@ -270,18 +262,6 @@ int _gettimeofday_r(struct _reent *pReent, struct timeval *__tp, void *__tzp) {
     return -1;
 }
 
-char *getcwd(char *buf, size_t size) {
-
-    return NULL;
-}
-
-void abort(void) {
-    // Abort called
-    printf("abort\n");
-    while (1)
-        ;
-}
-
 void _exit(int i) {
     printf("_exit\n");
     while (1)
@@ -289,23 +269,17 @@ void _exit(int i) {
 }
 
 void *__wrap_malloc(size_t sz) {
-    void *mem;
-    vTaskSuspendAll();
-
-    // ll_put_str("malloc\n");
-
-    mem = _malloc_r(_impure_ptr, sz);
-    (void)xTaskResumeAll();
-
-    return mem;
+    return pvPortMalloc(sz);
 }
 
 void __wrap_free(void *m) {
-    // ll_put_str("free\n");
+    vPortFree(m);
+}
 
-    vTaskSuspendAll();
+void *__wrap_calloc(size_t nitems, size_t size) {
+    return pvPortCalloc(nitems, size);
+}
 
-    _free_r(_impure_ptr, m);
-
-    (void)xTaskResumeAll();
+void *__wrap_realloc(void *pv, size_t size) {
+    return pvPortRealloc(pv, size);
 }

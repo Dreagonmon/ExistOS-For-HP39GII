@@ -61,12 +61,8 @@ void *pvPortMalloc( size_t xWantedSize )
 	void *pvReturn;
 	vTaskSuspendAll();
 	{
-		pvReturn = malloc( xWantedSize );
+		pvReturn = _malloc_r(_impure_ptr, xWantedSize);
 		traceMALLOC( pvReturn, xWantedSize );
-	}
-
-	if( pvReturn == NULL ){
-		pvReturn = malloc( xWantedSize );
 	}
 
 	( void ) xTaskResumeAll();
@@ -91,7 +87,7 @@ void vPortFree( void *pv )
 	{
 		vTaskSuspendAll();
 		{
-			free( pv );
+			_free_r(_impure_ptr, pv)
 			traceFREE( pv, 0 );
 		}
 		( void ) xTaskResumeAll();
@@ -104,7 +100,7 @@ void *pvPortRealloc(void *pv, size_t size)
 	void *pvReturn;
 	vTaskSuspendAll();
 	{
-		pvReturn = realloc(pv, size);
+		pvReturn = _realloc_r(_impure_ptr, pv, size);
 	}
 	( void ) xTaskResumeAll();
 

@@ -44,7 +44,7 @@ app_settings
 set(LINKER_SCRIPT 
     ${CMAKE_SOURCE_DIR}/Script/sys_ld.script
 )
-set(LINKER_FLAGS "SHELL:-T${LINKER_SCRIPT} -Wl,--wrap=malloc -Wl,--wrap=free")
+set(LINKER_FLAGS "SHELL:-T${LINKER_SCRIPT} -Wl,--wrap=malloc -Wl,--wrap=free -Wl,-wrap,calloc -Wl,-wrap,realloc")
 target_link_options(sys.elf PRIVATE ${LINKER_FLAGS}) 
 
 target_compile_options(sys.elf PRIVATE -mtune=arm926ej-s -mcpu=arm926ej-s -mlittle-endian -mfloat-abi=soft -marm

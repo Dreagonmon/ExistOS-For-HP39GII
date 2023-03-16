@@ -163,3 +163,49 @@ U8Size list_dir(U8String dir_path, char *out_buffer, U8Size len) {
     out_buffer[buffer_size_count] = '\0'; // char \0
     return buffer_size_count + 1;
 }
+
+U8Size path_append(char *dest, U8Size len, U8String part) {
+    U8Size base_len = u8_string_size(dest);
+    if (base_len > 1 && dest[base_len - 1] == '/') {
+        // strip tail '/'
+        base_len --;
+    }
+    U8Size part_len = u8_string_size(part);
+    const char *tmp = part;
+    if ((tmp = strchr(part, '/')) != NULL) {
+        part_len = tmp - part;
+    }
+    if (part_len == 1 && part[0] == '.') {
+        // concat nothing
+        dest[base_len] = '\0';
+        return base_len + 1;
+    } else if (part_len == 2 && part[0] == '.' && part[1] == '.') {
+        // parent dir
+        dest[base_len] = '\0'; // strip tail '/'
+        // if (base_len == 1 && dest[0] == '/') {
+        //     // "/" root path, ignore
+        //     return base_len + 1;
+        // }
+        U8Size offset = 0;
+        if ((tmp = strrchr(dest, '/')) != NULL) {
+            offset = tmp - dest;
+        }
+        if (offset == 0) {
+            if (dest[0] == '/') {
+                offset = 1; // start with '/', reserve '/'
+            }
+        }
+        memset(dest + offset, '\0', base_len - offset);
+        return offset + 1;
+    }
+    if (len < (base_len + part_len + 1 + 1)) { // '/' '\0'
+        // can't fit
+        return 0;
+    }
+    if (base_len > 0 && dest[base_len - 1] != '/') {
+        dest[base_len++] = '/'; // skip if start at 0
+    }
+    dest[base_len] = '\0';
+    strncat(dest, part, part_len);
+    return base_len + part_len + 1;
+}
