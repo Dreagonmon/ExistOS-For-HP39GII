@@ -103,7 +103,7 @@ static void _cc_slist_free_u8str_(void * data) {
     vPortFree(data);
 }
 
-U8Size list_dir(U8String dir_path, char *out_buffer, U8Size len) {
+U8Size list_dir(U8String dir_path, char *out_buffer, U8Size len, uint8_t show_files, uint8_t show_this_dir) {
     int ret;
     lfs_t *fs = get_fs_obj();
     lfs_dir_t *dir = &((lfs_dir_t){ 0 });
@@ -122,9 +122,21 @@ U8Size list_dir(U8String dir_path, char *out_buffer, U8Size len) {
         char *buffer = pvPortMalloc(name_buffer_size);
         memcpy(buffer, info->name, name_buffer_size);
         if (info->type == LFS_TYPE_DIR) {
-            cc_slist_add_last(dir_list, buffer);
+            if (name_buffer_size - 1 == 1 && buffer[0] == '.' && !show_this_dir) {
+                // skip add this dir
+                vPortFree(buffer);
+                continue;
+            } else {
+                cc_slist_add_last(dir_list, buffer);
+            }
         } else {
-            cc_slist_add_last(file_list, buffer);
+            if (show_files) {
+                cc_slist_add_last(file_list, buffer);
+            } else {
+                // skip add files
+                vPortFree(buffer);
+                continue;
+            }
         }
         buffer_size_count += name_buffer_size;
     }
@@ -208,4 +220,35 @@ U8Size path_append(char *dest, U8Size len, U8String part) {
     dest[base_len] = '\0';
     strncat(dest, part, part_len);
     return base_len + part_len + 1;
+}
+
+uint8_t path_exist(U8String path) {
+    struct lfs_info *info = pvPortMalloc(sizeof(struct lfs_info));
+    int res = lfs_stat(get_fs_obj(), path, info);
+    vPortFree(info);
+    return res >= 0;
+}
+
+uint8_t is_file(U8String path) {
+    struct lfs_info *info = pvPortMalloc(sizeof(struct lfs_info));
+    int res = lfs_stat(get_fs_obj(), path, info);
+    if (res >= 0) {
+        res = (info->type == LFS_TYPE_REG);
+    } else {
+        res = 0;
+    }
+    vPortFree(info);
+    return (uint8_t)res;
+}
+
+uint8_t is_dir(U8String path) {
+    struct lfs_info *info = pvPortMalloc(sizeof(struct lfs_info));
+    int res = lfs_stat(get_fs_obj(), path, info);
+    if (res >= 0) {
+        res = (info->type == LFS_TYPE_DIR);
+    } else {
+        res = 0;
+    }
+    vPortFree(info);
+    return (uint8_t)res;
 }

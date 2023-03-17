@@ -19,12 +19,16 @@ lfs_t *get_fs_obj(void);
  * @param[in] len out_buffer size.
  * @return U8Size bytes in 'out_buffer' (include all '\0'), 0 if failed (not a dir, bufer too small).
  * */
-U8Size list_dir(U8String dir_path, char *out_buffer, U8Size len);
+U8Size list_dir(U8String dir_path, char *out_buffer, U8Size len, uint8_t show_files, uint8_t show_this_dir);
 
 /** path_append
  * @param[in] dest base and dest path string, must big enough.
  * @param[out] len dest buffer size.
  * @param[in] part part to be append after base path. must not contain any special characters.
- * @return U8Size bytes in 'dest' (include tail '\0'), 0 if buffer is too small.
+ * @return U8Size bytes in 'dest' (include tail '\0'), 0 if buffer is too small. if return false, the dest is untouched.
  * */
 U8Size path_append(char *dest, U8Size len, U8String part);
+
+uint8_t path_exist(U8String path);
+uint8_t is_file(U8String path);
+uint8_t is_dir(U8String path);
