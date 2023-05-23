@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/arm-none-eabi/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++20"
+        }
+    ],
+    "version": 4
+}
